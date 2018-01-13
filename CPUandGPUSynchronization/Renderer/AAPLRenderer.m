@@ -65,40 +65,39 @@ static const NSUInteger MaxBuffersInFlight = 3;
     id<MTLRenderPipelineState> _pipelineState;
     id<MTLBuffer> _vertexBuffers[MaxBuffersInFlight];
 
-    // The current size of our view so we can use this in our render pipeline
+    // Размер вьюпорта
     vector_uint2 _viewportSize;
 
+    // Индекс текущего активного буффера
     NSUInteger _currentBuffer;
 
-    NSArray<AAPLSprite*> *_sprites;
+    // Массив спрайтов
+    NSArray<AAPLSprite*>* _sprites;
 
     NSUInteger _spritesPerRow;
-    NSUInteger _rowsOfSprites;
+    NSUInteger _spritesPerColumn;
     NSUInteger _totalSpriteVertexCount;
-
 }
 
-/// Initialize with the MetalKit view from which we'll obtain our Metal device
-- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView
-{
+// Создание рендера на основании вьюшки
+- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView {
     self = [super init];
-    if(self)
-    {
+    if(self) {
         _device = mtkView.device;
 
+        // Создание самафора
         _inFlightSemaphore = dispatch_semaphore_create(MaxBuffersInFlight);
-        // Create and load our basic Metal state objects
-
-        // Load all the shader files with a metal file extension in the project
+        
+        // Создание библиотеки
         id<MTLLibrary> defaultLibrary = [_device newDefaultLibrary];
 
-        // Load the vertex function into the library
+        // Вершинный шейдер
         id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"vertexShader"];
 
-        // Load the fragment function into the library
+        // Фрагментный шейдер
         id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"fragmentShader"];
 
-        // Create a reusable pipeline state
+        // Создаем пайплайн стейт
         MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineStateDescriptor.label = @"MyPipeline";
         pipelineStateDescriptor.sampleCount = mtkView.sampleCount;
@@ -110,33 +109,34 @@ static const NSUInteger MaxBuffersInFlight = 3;
 
         NSError *error = NULL;
         _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-        if (!_pipelineState)
-        {
+        if (!_pipelineState){
             NSLog(@"Failed to created pipeline state, error %@", error);
         }
-        // Create the command queue
+
+        // Создание очереди комманд
         _commandQueue = [_device newCommandQueue];
 
+        // Создаем спрайты
         [self generateSprites];
 
+        // Количество вершин для всех спрайтов
         _totalSpriteVertexCount = AAPLSprite.vertexCount * _sprites.count;
 
+        // размер буффера вершин для спрайта
         NSUInteger spriteVertexBufferSize = _totalSpriteVertexCount * sizeof(AAPLVertex);
 
-        for(NSUInteger bufferIndex = 0; bufferIndex < MaxBuffersInFlight; bufferIndex++)
-        {
+        // Создание буфферов данных вершин для каждого кадра
+        for(NSUInteger bufferIndex = 0; bufferIndex < MaxBuffersInFlight; bufferIndex++) {
             _vertexBuffers[bufferIndex] = [_device newBufferWithLength:spriteVertexBufferSize
                                                                options:MTLResourceStorageModeShared];
         }
-
     }
 
     return self;
 }
 
-/// Generate a list of sprites, initializing each and inserting it into `_sprites`.
-- (void) generateSprites
-{
+// Создание спрайтов
+- (void) generateSprites {
     const float XSpacing = 12;
     const float YSpacing = 16;
 
@@ -161,12 +161,12 @@ static const NSUInteger MaxBuffersInFlight = 3;
     const NSUInteger NumColors = sizeof(Colors) / sizeof(vector_float4);
 
     _spritesPerRow = SpritesPerRow;
-    _rowsOfSprites = RowsOfSprites;
+    _spritesPerColumn = RowsOfSprites;
 
-    NSMutableArray *sprites = [[NSMutableArray alloc] initWithCapacity:_rowsOfSprites * _spritesPerRow];
+    NSMutableArray *sprites = [[NSMutableArray alloc] initWithCapacity:_spritesPerColumn * _spritesPerRow];
 
     // Create a grid of 'sprite' objects
-    for(NSUInteger row = 0; row < _rowsOfSprites; row++)
+    for(NSUInteger row = 0; row < _spritesPerColumn; row++)
     {
         for(NSUInteger column = 0; column < _spritesPerRow; column++)
         {
@@ -174,7 +174,7 @@ static const NSUInteger MaxBuffersInFlight = 3;
 
             // Determine the position of our sprite in the grid
             spritePosition.x = ((-((float)_spritesPerRow) / 2.0) + column) * XSpacing;
-            spritePosition.y = ((-((float)_rowsOfSprites) / 2.0) + row) * YSpacing + WaveMagnitude;
+            spritePosition.y = ((-((float)_spritesPerColumn) / 2.0) + row) * YSpacing + WaveMagnitude;
 
             // Displace the height of this sprite using a sin wave
             spritePosition.y += (sin(spritePosition.x/WaveMagnitude) * WaveMagnitude);
@@ -192,48 +192,37 @@ static const NSUInteger MaxBuffersInFlight = 3;
 }
 
 /// Called whenever view changes orientation or is resized
-- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-{
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
     // Save the size of the drawable as we'll pass these
     //   values to our vertex shader when we draw
     _viewportSize.x = size.width;
     _viewportSize.y = size.height;
 }
 
-/// Update the position of each sprite and also update vertices for each sprite in our buffer
-- (void)updateState
-{
+// Обновляем позицию каждого спрайта в очередном буффере на отрисовку
+- (void)updateState {
+	// Получаем указатель на данные текущего буффера
+    AAPLVertex* currentSpriteVertices = _vertexBuffers[_currentBuffer].contents;
 
-    // Change the position of the sprites by getting taking on the height of the sprite
-    //  immediately to the right of the current sprite.
-
-    AAPLVertex *currentSpriteVertices = _vertexBuffers[_currentBuffer].contents;
     NSUInteger  currentVertex = _totalSpriteVertexCount-1;
-    NSUInteger  spriteIdx = (_rowsOfSprites * _spritesPerRow)-1;
+    NSUInteger  spriteIdx = (_spritesPerColumn * _spritesPerRow)-1;
 
-    for(NSInteger row = _rowsOfSprites - 1; row >= 0; row--)
-    {
+    for(NSInteger row = _spritesPerColumn - 1; row >= 0; row--) {
         float startY = _sprites[spriteIdx].position.y;
-        for(NSInteger spriteInRow = _spritesPerRow-1; spriteInRow >= 0; spriteInRow--)
-        {
+        for(NSInteger spriteInRow = _spritesPerRow-1; spriteInRow >= 0; spriteInRow--) {
             // Update the position of our sprite
             vector_float2 updatedPosition = _sprites[spriteIdx].position;
 
-            if(spriteInRow == 0)
-            {
+            if(spriteInRow == 0) {
                 updatedPosition.y = startY;
-            }
-            else
-            {
+            }else{
                 updatedPosition.y = _sprites[spriteIdx-1].position.y;
             }
 
             _sprites[spriteIdx].position = updatedPosition;
 
-            // Update vertices of the current vertex buffer with the sprites new position
-
-            for(NSInteger vertexOfSprite = AAPLSprite.vertexCount-1; vertexOfSprite >= 0 ; vertexOfSprite--)
-            {
+            // Обновляем вершины в текущем буффере вершин с новыми позициями спрайтов 
+            for(NSInteger vertexOfSprite = AAPLSprite.vertexCount-1; vertexOfSprite >= 0 ; vertexOfSprite--){
                 currentSpriteVertices[currentVertex].position = AAPLSprite.vertices[vertexOfSprite].position + _sprites[spriteIdx].position;
                 currentSpriteVertices[currentVertex].color = _sprites[spriteIdx].color;
                 currentVertex--;
@@ -243,20 +232,18 @@ static const NSUInteger MaxBuffersInFlight = 3;
     }
 }
 
-/// Called whenever the view needs to render
-- (void)drawInMTKView:(nonnull MTKView *)view
-{
-    // Wait to ensure only MaxBuffersInFlight number of frames are getting proccessed
-    //   by any stage in the Metal pipeline (App, Metal, Drivers, GPU, etc)
+// Вызывается для рендеринга
+- (void)drawInMTKView:(nonnull MTKView *)view {
+    // Ждем, чтобы не превысилось количество кадров на GPU
     dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_FOREVER);
 
-    // Iterate through our Metal buffers, and cycle back to the first when we've written to MaxBuffersInFlight
+    // Увеличиваем индекс буффера, который будет обновляться
     _currentBuffer = (_currentBuffer + 1) % MaxBuffersInFlight;
 
-    // Update data in our buffers
+    // Обновляем буффер
     [self updateState];
 
-    // Create a new command buffer for each render pass to the current drawable
+    // Создаем новый буффер комманд для отрисовки
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
 
@@ -266,45 +253,45 @@ static const NSUInteger MaxBuffersInFlight = 3;
     //   be needed by Metal and the GPU, meaning we can overwrite the buffer contents without
     //   corrupting the rendering.
     __block dispatch_semaphore_t block_sema = _inFlightSemaphore;
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer)
-    {
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer){
         dispatch_semaphore_signal(block_sema);
     }];
 
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
 
-    if(renderPassDescriptor != nil)
-    {
-        // Create a render command encoder so we can render into something
-        id<MTLRenderCommandEncoder> renderEncoder =
-        [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    if(renderPassDescriptor != nil){
+        // Создаем энкодер
+        id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         renderEncoder.label = @"MyRenderEncoder";
 
-        // Set render command encoder state
+        // Выставляем состояние энкодера
         [renderEncoder setCullMode:MTLCullModeBack];
         [renderEncoder setRenderPipelineState:_pipelineState];
 
+        // Выставляем буффер вершин
         [renderEncoder setVertexBuffer:_vertexBuffers[_currentBuffer]
                                offset:0
                               atIndex:AAPLVertexInputIndexVertices];
 
+        // Выставляем данные для юниформов
         [renderEncoder setVertexBytes:&_viewportSize
                                length:sizeof(_viewportSize)
                               atIndex:AAPLVertexInputIndexViewportSize];
 
-        // Draw the vertices of our quads
+        // Вызываем отрисовку
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                           vertexStart:0
                           vertexCount:_totalSpriteVertexCount];
 
-        // We're done encoding commands
+        // Заканчиваем кодирование комманд
         [renderEncoder endEncoding];
 
         // Schedule a present once the framebuffer is complete using the current drawable
+        // Ставим в очередь отрисовку на экран уже готового буффера цвета из предыдущих кадров
         [commandBuffer presentDrawable:view.currentDrawable];
     }
 
-    // Finalize rendering here & push the command buffer to the GPU
+    // Заканчиваем рендеринг и отправляем коммандный буффер на GPU
     [commandBuffer commit];
 }
 
