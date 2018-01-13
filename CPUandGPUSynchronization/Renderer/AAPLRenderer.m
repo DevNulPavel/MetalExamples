@@ -1,10 +1,3 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Implementation of renderer class which performs Metal setup and per frame rendering
-*/
-
 @import MetalKit;
 
 #import "AAPLRenderer.h"

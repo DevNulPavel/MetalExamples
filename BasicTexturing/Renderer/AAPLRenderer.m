@@ -1,23 +1,13 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Implementation of renderer class which performs Metal setup and per frame rendering
-*/
-
 @import simd;
 @import MetalKit;
 
 #import "AAPLRenderer.h"
 #import "AAPLImage.h"
 
-// Header shared between C code here, which executes Metal API commands, and .metal files, which
-//   uses these types as input to the shaders
+// Константы и общие типы данных для шейдера
 #import "AAPLShaderTypes.h"
 
-// Main class performing the rendering
-@implementation AAPLRenderer
-{
+@implementation AAPLRenderer {
     // The device (aka GPU) we're using to render
     id<MTLDevice> _device;
 
@@ -41,20 +31,17 @@ Implementation of renderer class which performs Metal setup and per frame render
 }
 
 /// Initialize with the MetalKit view from which we'll obtain our metal device
-- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView
-{
+- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView {
     self = [super init];
-    if(self)
-    {
+    if(self){
         _device = mtkView.device;
 
-        NSURL *imageFileLocation = [[NSBundle mainBundle] URLForResource:@"Image"
+        NSURL* imageFileLocation = [[NSBundle mainBundle] URLForResource:@"Image"
                                                            withExtension:@"tga"];
 
         AAPLImage * image = [[AAPLImage alloc] initWithTGAFileAtLocation:imageFileLocation];
 
-        if(!image)
-        {
+        if(!image){
             NSLog(@"Failed to create the image from %@", imageFileLocation.absoluteString);
             return nil;
         }
@@ -128,8 +115,7 @@ Implementation of renderer class which performs Metal setup and per frame render
         NSError *error = NULL;
         _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
                                                                  error:&error];
-        if (!_pipelineState)
-        {
+        if (!_pipelineState){
             // Pipeline State creation could fail if we haven't properly set up our pipeline descriptor.
             //  If the Metal API validation is enabled, we can find out more information about what
             //  went wrong.  (Metal API validation is enabled by default when a debug build is run
@@ -145,8 +131,7 @@ Implementation of renderer class which performs Metal setup and per frame render
 }
 
 /// Called whenever view changes orientation or is resized
-- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-{
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
     // Save the size of the drawable as we'll pass these
     //   values to our vertex shader when we draw
     _viewportSize.x = size.width;
@@ -154,9 +139,7 @@ Implementation of renderer class which performs Metal setup and per frame render
 }
 
 /// Called whenever the view needs to render a frame
-- (void)drawInMTKView:(nonnull MTKView *)view
-{
-
+- (void)drawInMTKView:(nonnull MTKView *)view {
     // Create a new command buffer for each render pass to the current drawable
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
@@ -164,8 +147,7 @@ Implementation of renderer class which performs Metal setup and per frame render
     // Obtain a renderPassDescriptor generated from the view's drawable textures
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
 
-    if(renderPassDescriptor != nil)
-    {
+    if(renderPassDescriptor != nil){
         // Create a render command encoder so we can render into something
         id<MTLRenderCommandEncoder> renderEncoder =
         [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];

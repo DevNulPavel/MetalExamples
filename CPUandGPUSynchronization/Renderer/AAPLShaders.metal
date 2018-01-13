@@ -23,7 +23,7 @@ vertex RasterizerData vertexShader(uint vertexID [[vertex_id]],	// ID верши
 {
     RasterizerData out;
 
-    // Начальное значение позиции, надо ли???
+    // Начальное значение позиции
     out.clipSpacePosition = vector_float4(0.0, 0.0, 0.0, 1.0);
 
     // С помощью индекса текущей вершины - получаем непосредственно позицию точки
