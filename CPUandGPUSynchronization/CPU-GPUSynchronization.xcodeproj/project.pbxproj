@@ -54,7 +54,7 @@
 		3ABBACED1F73154F0080C72C /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		3ABBACEE1F73154F0080C72C /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS11.0.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
 		3AC448951EC126D7006F9D6B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		7841DB5A8DE0D1B64C87BD04 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
+		7841DB5A8DE0D1B64C87BD04 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		DFA82E908CC4A7CA9C0C2485 /* SampleCode.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,7 +186,6 @@
 			children = (
 				7841DB5A8DE0D1B64C87BD04 /* LICENSE.txt */,
 			);
-			name = LICENSE;
 			path = LICENSE;
 			sourceTree = "<group>";
 		};
@@ -255,7 +254,8 @@
 				TargetAttributes = {
 					3A7072DA1EBD4A67001F05E4 = {
 						CreatedOnToolsVersion = 8.3.2;
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = UJMSA9U58F;
+						ProvisioningStyle = Manual;
 					};
 					3A7072F41EBD4A67001F05E4 = {
 						CreatedOnToolsVersion = 8.3.2;
@@ -491,7 +491,8 @@
 			baseConfigurationReference = DFA82E908CC4A7CA9C0C2485 /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					TARGET_IOS,
 					"$(inherited)",
@@ -501,7 +502,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.CPU-GPUSynchronization${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "CPU-GPUSynchronization";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE = "48f30f78-9f68-4959-a279-67073479eadd";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -512,14 +514,16 @@
 			baseConfigurationReference = DFA82E908CC4A7CA9C0C2485 /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
 				GCC_PREPROCESSOR_DEFINITIONS = TARGET_IOS;
 				INFOPLIST_FILE = Application/iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.CPU-GPUSynchronization${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "CPU-GPUSynchronization";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE = "48f30f78-9f68-4959-a279-67073479eadd";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -570,7 +574,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = DFA82E908CC4A7CA9C0C2485 /* SampleCode.xcconfig */;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
@@ -592,7 +596,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = DFA82E908CC4A7CA9C0C2485 /* SampleCode.xcconfig */;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";

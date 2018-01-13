@@ -62,7 +62,8 @@ static const NSUInteger MaxBuffersInFlight = 3;
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
 
-    id<MTLRenderPipelineState> _pipelineState;
+    id<MTLRenderPipelineState> _pipelineState1;
+    id<MTLRenderPipelineState> _pipelineState2;
     id<MTLBuffer> _vertexBuffers[MaxBuffersInFlight];
 
     // Размер вьюпорта
@@ -95,21 +96,30 @@ static const NSUInteger MaxBuffersInFlight = 3;
         id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"vertexShader"];
 
         // Фрагментный шейдер
-        id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"fragmentShader"];
+        id<MTLFunction> fragmentFunction1 = [defaultLibrary newFunctionWithName:@"fragmentShader1"];
+        id<MTLFunction> fragmentFunction2 = [defaultLibrary newFunctionWithName:@"fragmentShader2"];
 
-        // Создаем пайплайн стейт
-        MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        // Создаем базовое описание пайплайна
+        MTLRenderPipelineDescriptor* pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineStateDescriptor.label = @"MyPipeline";
         pipelineStateDescriptor.sampleCount = mtkView.sampleCount;
         pipelineStateDescriptor.vertexFunction = vertexFunction;
-        pipelineStateDescriptor.fragmentFunction = fragmentFunction;
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat;
         pipelineStateDescriptor.depthAttachmentPixelFormat = mtkView.depthStencilPixelFormat;
         pipelineStateDescriptor.stencilAttachmentPixelFormat = mtkView.depthStencilPixelFormat;
 
-        NSError *error = NULL;
-        _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-        if (!_pipelineState){
+        NSError* error = NULL;
+        // Создаем пайплайн стейт 1
+        pipelineStateDescriptor.fragmentFunction = fragmentFunction1;
+        _pipelineState1 = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
+        if (!_pipelineState1){
+            NSLog(@"Failed to created pipeline state, error %@", error);
+        }
+        
+        // Создаем пайплайн стейт 2
+        pipelineStateDescriptor.fragmentFunction = fragmentFunction2;
+        _pipelineState2 = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
+        if (!_pipelineState2){
             NSLog(@"Failed to created pipeline state, error %@", error);
         }
 
@@ -146,15 +156,15 @@ static const NSUInteger MaxBuffersInFlight = 3;
 
     const vector_float4 Colors[] =
     {
-        { 1.0, 0.0, 0.0, 1.0 },  // Red
-        { 0.0, 1.0, 1.0, 1.0 },  // Cyan
-        { 0.0, 1.0, 0.0, 1.0 },  // Green
-        { 1.0, 0.5, 0.0, 1.0 },  // Orange
-        { 1.0, 0.0, 1.0, 1.0 },  // Magenta
-        { 0.0, 0.0, 1.0, 1.0 },  // Blue
-        { 1.0, 1.0, 0.0, 1.0 },  // Yellow
-        { .75, 0.5, .25, 1.0 },  // Brown
-        { 1.0, 1.0, 1.0, 1.0 },  // White
+        { 1.0, 0.0, 0.0, 0.8 },  // Red
+        { 0.0, 1.0, 1.0, 0.8 },  // Cyan
+        { 0.0, 1.0, 0.0, 0.8 },  // Green
+        { 1.0, 0.5, 0.0, 0.8 },  // Orange
+        { 1.0, 0.0, 1.0, 0.8 },  // Magenta
+        { 0.0, 0.0, 1.0, 0.8 },  // Blue
+        { 1.0, 1.0, 0.0, 0.8 },  // Yellow
+        { .75, 0.5, .25, 0.8 },  // Brown
+        { 1.0, 1.0, 1.0, 0.8 },  // White
 
     };
 
@@ -201,27 +211,27 @@ static const NSUInteger MaxBuffersInFlight = 3;
 
 // Обновляем позицию каждого спрайта в очередном буффере на отрисовку
 - (void)updateState {
-	// Получаем указатель на данные текущего буффера
+    // Получаем указатель на данные текущего буффера
     AAPLVertex* currentSpriteVertices = _vertexBuffers[_currentBuffer].contents;
-
+    
     NSUInteger  currentVertex = _totalSpriteVertexCount-1;
     NSUInteger  spriteIdx = (_spritesPerColumn * _spritesPerRow)-1;
-
+    
     for(NSInteger row = _spritesPerColumn - 1; row >= 0; row--) {
         float startY = _sprites[spriteIdx].position.y;
         for(NSInteger spriteInRow = _spritesPerRow-1; spriteInRow >= 0; spriteInRow--) {
             // Update the position of our sprite
             vector_float2 updatedPosition = _sprites[spriteIdx].position;
-
+            
             if(spriteInRow == 0) {
                 updatedPosition.y = startY;
             }else{
                 updatedPosition.y = _sprites[spriteIdx-1].position.y;
             }
-
+            
             _sprites[spriteIdx].position = updatedPosition;
-
-            // Обновляем вершины в текущем буффере вершин с новыми позициями спрайтов 
+            
+            // Обновляем вершины в текущем буффере вершин с новыми позициями спрайтов
             for(NSInteger vertexOfSprite = AAPLSprite.vertexCount-1; vertexOfSprite >= 0 ; vertexOfSprite--){
                 currentSpriteVertices[currentVertex].position = AAPLSprite.vertices[vertexOfSprite].position + _sprites[spriteIdx].position;
                 currentSpriteVertices[currentVertex].color = _sprites[spriteIdx].color;
@@ -266,18 +276,39 @@ static const NSUInteger MaxBuffersInFlight = 3;
 
         // Выставляем состояние энкодера
         [renderEncoder setCullMode:MTLCullModeBack];
-        [renderEncoder setRenderPipelineState:_pipelineState];
 
         // Выставляем буффер вершин
         [renderEncoder setVertexBuffer:_vertexBuffers[_currentBuffer]
                                offset:0
                               atIndex:AAPLVertexInputIndexVertices];
 
+        // Выставляем пайплайн 1
+        [renderEncoder setRenderPipelineState:_pipelineState1];
+        
         // Выставляем данные для юниформов
-        [renderEncoder setVertexBytes:&_viewportSize
+        vector_uint2 viewportSize1;
+        viewportSize1.x = _viewportSize.x*0.5;
+        viewportSize1.y = _viewportSize.y*0.5;
+        [renderEncoder setVertexBytes:&viewportSize1
                                length:sizeof(_viewportSize)
                               atIndex:AAPLVertexInputIndexViewportSize];
-
+        
+        // Вызываем отрисовку
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
+                          vertexStart:0
+                          vertexCount:_totalSpriteVertexCount];
+        
+        // Выставляем пайплайн 2
+        [renderEncoder setRenderPipelineState:_pipelineState2];
+        
+        // Выставляем данные для юниформов
+        vector_uint2 viewportSize2;
+        viewportSize2.x = _viewportSize.x*0.7;
+        viewportSize2.y = _viewportSize.y*0.7;
+        [renderEncoder setVertexBytes:&viewportSize2
+                               length:sizeof(_viewportSize)
+                              atIndex:AAPLVertexInputIndexViewportSize];
+        
         // Вызываем отрисовку
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                           vertexStart:0

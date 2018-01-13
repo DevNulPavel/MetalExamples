@@ -14,7 +14,6 @@ typedef struct {
 
     // Данное поле не имеет никакого спеецификатора типа - поэтому происходит интерполяция значений
     float4 color;
-
 } RasterizerData;
 
 // Vertex Function
@@ -43,7 +42,12 @@ vertex RasterizerData vertexShader(uint vertexID [[vertex_id]],	// ID верши
 }
 
 // Fragment function
-fragment float4 fragmentShader(RasterizerData in [[stage_in]]){
-    return in.color;
+fragment float4 fragmentShader1(RasterizerData in [[stage_in]]){
+    return in.color * vector_float4(1.0, 0.0, 0.0, 1.0);
+}
+
+// Fragment function
+fragment float4 fragmentShader2(RasterizerData in [[stage_in]]){
+    return in.color * vector_float4(0.0, 1.0, 0.0, 1.0);
 }
 
