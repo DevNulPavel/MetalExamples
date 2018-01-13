@@ -9,33 +9,28 @@ Implementation of renderer class which performs Metal setup and per frame render
 
 #import "AAPLRenderer.h"
 
-// Header shared between C code here, which executes Metal API commands, and .metal files, which
-//   uses these types as inputs to the shaders
+// Константы и общие типы данных для шейдера
 #import "AAPLShaderTypes.h"
 
-// The max number of command buffers in flight
+// Максимальное количество буфферов в обработке
 static const NSUInteger MaxBuffersInFlight = 3;
 
 
-// A simple class representing our sprite object, which is just a colored quad on screen
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Простой класс, представляющий из себя объект спрайта
 @interface AAPLSprite : NSObject
-
 @property (nonatomic) vector_float2 position;
-
 @property (nonatomic) vector_float4 color;
-
 +(const AAPLVertex*)vertices;
-
 +(NSUInteger)vertexCount;
-
 @end
+
 
 @implementation AAPLSprite
 
-// Return the vertices of one quad posistion at the origin.  After updating the
-//   sprite's position each frame, we copy it to our vertex buffer
-+(const AAPLVertex *)vertices
-{
+// Метод, возвращающий вершины квадрата спрайта
++(const AAPLVertex *)vertices {
     const float SpriteSize = 5;
     static const AAPLVertex spriteVertices[] =
     {
@@ -53,22 +48,22 @@ static const NSUInteger MaxBuffersInFlight = 3;
 }
 
 // The number of vertices for each sprite
-+(NSUInteger) vertexCount
-{
++(NSUInteger)vertexCount{
     return 6;
 }
-
 @end
 
-// Main class performing the rendering
-@implementation AAPLRenderer
-{
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+@implementation AAPLRenderer {
     dispatch_semaphore_t _inFlightSemaphore;
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
 
     id<MTLRenderPipelineState> _pipelineState;
-    id<MTLBuffer>              _vertexBuffers[MaxBuffersInFlight];
+    id<MTLBuffer> _vertexBuffers[MaxBuffersInFlight];
 
     // The current size of our view so we can use this in our render pipeline
     vector_uint2 _viewportSize;

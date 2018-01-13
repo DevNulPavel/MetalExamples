@@ -1,34 +1,23 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Header containing types and enum constants shared between Metal shaders and C/ObjC source
-*/
-
 #ifndef AAPLShaderTypes_h
 #define AAPLShaderTypes_h
 
 #include <simd/simd.h>
 
-// Buffer index values shared between shader and C code to ensure Metal shader buffer inputs match
-//   Metal API buffer set calls
+// Индексы общих буфферов отрисовки, общие данные на CPU и GPU
 typedef enum AAPLVertexInputIndex
 {
-    AAPLVertexInputIndexVertices     = 0,
-    AAPLVertexInputIndexViewportSize = 1,
+    AAPLVertexInputIndexVertices     = 0,	// Индекс буффера вершин
+    AAPLVertexInputIndexViewportSize = 1,	// Индекс буффера вьюпорта (юниформ)
 } AAPLVertexInputIndex;
 
-//  This structure defines the layout of each vertex in the array of vertices set as an input to our
-//    Metal vertex shader.  Since this header is shared between our .metal shader and C code,
-//    we can be sure that the layout of the vertex array in the code matches the layout that
-//    our vertex shader expects
+// Структура общая для шейдера, определяющая структуру данных вершин
 typedef struct
 {
-    // Positions in pixel space (i.e. a value of 100 indicates 100 pixels from the origin/center)
+    // Позиция в пиксельных координатах (0,0), (100,100)
     vector_float2 position;
 
-    // Floating point RGBA colors
+    // Цвет
     vector_float4 color;
 } AAPLVertex;
 
-#endif /* AAPLShaderTypes_h */
+#endif
