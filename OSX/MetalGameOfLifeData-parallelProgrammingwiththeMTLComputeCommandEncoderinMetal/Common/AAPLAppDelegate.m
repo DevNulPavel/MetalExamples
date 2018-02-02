@@ -11,11 +11,9 @@ Application delegate for the Game of Life sample. Responds to application lifecy
 @implementation AAPLAppDelegate
 
 #if TARGET_OS_OSX
-
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
     return YES;
 }
-
 #endif
 
 @end
