@@ -1,75 +1,61 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Implementation of renderer class which performs Metal setup and per frame rendering
-*/
-
 @import simd;
 @import MetalKit;
 
 #import "AAPLRenderer.h"
 #import "AAPLImage.h"
 
-// Header shared between C code here, which executes Metal API commands, and .metal files, which
-//   uses these types as input to the shaders
+// Общий хедер для рендера и шейдеров
 #import "AAPLShaderTypes.h"
 
-// Main class performing the rendering
-@implementation AAPLRenderer
-{
-    // The device (aka GPU) we're using to render
+// Класс рендеринга
+@implementation AAPLRenderer {
+    // Устройство
     id<MTLDevice> _device;
 
-    // Our compute pipeline composed of our kernel defined in the .metal shader file
+    // Вычислительный пайплайн
     id<MTLComputePipelineState> _computePipelineState;
 
-    // Our render pipeline composed of our vertex and fragment shaders in the .metal shader file
+    // Пайплайн отрисовки
     id<MTLRenderPipelineState> _renderPipelineState;
 
-    // The command Queue from which we'll obtain command buffers
+    // Буффер комманд
     id<MTLCommandQueue> _commandQueue;
 
-    // Texture object which serves as the source for our image processing
+    // Входная текстура
     id<MTLTexture> _inputTexture;
 
-    // Texture object which serves as the output for our image processing
+    // Выходная текстура
     id<MTLTexture> _outputTexture;
 
-    // The current size of our view so we can use this in our render pipeline
+    // Размер вьюпорта
     vector_uint2 _viewportSize;
 
-    // Compute kernel parameters
+    // Параметры компьютерного ядра вычисления
     MTLSize _threadgroupSize;
     MTLSize _threadgroupCount;
 }
 
-/// Initialize with the MetalKit view from which we'll obtain our metal device
-- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView
-{
+- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView {
     self = [super init];
-    if(self)
-    {
+    if(self) {
         NSError *error = NULL;
 
         _device = mtkView.device;
 
-        // Indicate we'll set the pixel format of  color texture to which we're drawing
-        //   to the unsigned normalized RGBA8 pixel format
+        // Настройка цвета пикселей
         mtkView.colorPixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
 
-        // Load all the shader files with a metal file extension in the project
+        // Библиотека
         id<MTLLibrary> defaultLibrary = [_device newDefaultLibrary];
 
-        // Load the kernel function from the library
+        // Получаем вычислительный шейдер
         id<MTLFunction> kernelFunction = [defaultLibrary newFunctionWithName:@"grayscaleKernel"];
 
-        // Create a compute pipeline state
+        // Создаем вычислительный пайплайн стейт
         _computePipelineState = [_device newComputePipelineStateWithFunction:kernelFunction
                                                                        error:&error];
 
-        if(!_computePipelineState)
-        {
+        if(!_computePipelineState) {
             // Compute pipeline State creation could fail if kernelFunction failed to load from the
             //   library.  If the Metal API validation is enabled, we automatically be given more
             //   information about what went wrong.  (Metal API validation is enabled by default
@@ -78,14 +64,14 @@ Implementation of renderer class which performs Metal setup and per frame render
             return nil;
         }
 
-        // Load the vertex function from the library
+        // Вершинный шейдер
         id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"vertexShader"];
 
-        // Load the fragment function from the library
+        // Фрагментный шейдер
         id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"samplingShader"];
 
-        // Set up a descriptor for creating a pipeline state object
-        MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        // Дескриптор пайплайна рендеринга
+        MTLRenderPipelineDescriptor* pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineStateDescriptor.label = @"Simple Pipeline";
         pipelineStateDescriptor.vertexFunction = vertexFunction;
         pipelineStateDescriptor.fragmentFunction = fragmentFunction;
@@ -93,92 +79,91 @@ Implementation of renderer class which performs Metal setup and per frame render
 
         _renderPipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
                                                                  error:&error];
-        if (!_renderPipelineState)
-        {
+        if (!_renderPipelineState){
             NSLog(@"Failed to create render pipeline state, error %@", error);
         }
 
-        NSURL *imageFileLocation = [[NSBundle mainBundle] URLForResource:@"Image"
+        // Создание картинки
+        NSURL* imageFileLocation = [[NSBundle mainBundle] URLForResource:@"Image"
                                                            withExtension:@"tga"];
 
-        AAPLImage * image = [[AAPLImage alloc] initWithTGAFileAtLocation:imageFileLocation];
+        AAPLImage* image = [[AAPLImage alloc] initWithTGAFileAtLocation:imageFileLocation];
 
-        if(!image)
-        {
+        if(!image){
             return nil;
         }
+        
+        // Создание дескриптора текстуры
+        MTLTextureDescriptor* textureDescriptor = [[MTLTextureDescriptor alloc] init];
 
-        MTLTextureDescriptor *textureDescriptor = [[MTLTextureDescriptor alloc] init];
-
-        // Indicate we're creating a 2D texture.
+        // Описание типа текстуры
         textureDescriptor.textureType = MTLTextureType2D;
 
-        // Indicate that each pixel has a Blue, Green, Red, and Alpha channel,
-        //    each in an 8 bit unnormalized value (0 maps 0.0 while 255 maps to 1.0)
+        // Описание формата текстуры
         textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
         textureDescriptor.width = image.width;
         textureDescriptor.height = image.height;
+        
+        // Входная текстура используется только для чтения в шейдере
         textureDescriptor.usage = MTLTextureUsageShaderRead;
 
-        // Create an input and output texture with similar descriptors.  We'll only
-        //   fill in the inputTexture however.  And we'll set the output texture's descriptor
-        //   to MTLTextureUsageShaderWrite
+        // Непосредственно создание входной текстуры на основании дескриптора
         _inputTexture = [_device newTextureWithDescriptor:textureDescriptor];
+        
+        // Выходная текстура используется для записи из шейдера и для чтения
+        textureDescriptor.usage = MTLTextureUsageShaderWrite | MTLTextureUsageShaderRead;
 
-        textureDescriptor.usage = MTLTextureUsageShaderWrite | MTLTextureUsageShaderRead ;
-
+        // Создание выходной текстуры
         _outputTexture = [_device newTextureWithDescriptor:textureDescriptor];
-
+        
+        // Регион текстур
         MTLRegion region = {{ 0, 0, 0 }, {textureDescriptor.width, textureDescriptor.height, 1}};
 
-        // size of each texel * the width of the textures
+        // Сколько байт идет на строку
         NSUInteger bytesPerRow = 4 * textureDescriptor.width;
 
-        // Copy the bytes from our data object into the texture
+        // Загружает данные во входную текстуру
         [_inputTexture replaceRegion:region
-                    mipmapLevel:0
-                      withBytes:image.data.bytes
-                    bytesPerRow:bytesPerRow];
+                         mipmapLevel:0
+                           withBytes:image.data.bytes
+                         bytesPerRow:bytesPerRow];
 
-        if(!_inputTexture || error)
-        {
+        if(!_inputTexture || error) {
             NSLog(@"Error creating texture %@", error.localizedDescription);
             return nil;
         }
 
-        // Set the compute kernel's threadgroup size of 16x16
+        // Размер тредгруппы
         _threadgroupSize = MTLSizeMake(16, 16, 1);
 
         // Calculate the number of rows and columns of threadgroups given the width of the input image
         // Ensure that you cover the entire image (or more) so you process every pixel
+        
+        // Вычисляем количество строк и столбцов тредгрупп
         _threadgroupCount.width  = (_inputTexture.width  + _threadgroupSize.width -  1) / _threadgroupSize.width;
         _threadgroupCount.height = (_inputTexture.height + _threadgroupSize.height - 1) / _threadgroupSize.height;
 
-        // Since we're only dealing with a 2D data set, set depth to 1
+        // Работа идет с 2D данными - так что глубина у нас нулевая
         _threadgroupCount.depth = 1;
 
-        // Create the command queue
+        // Создание очереди комманд
         _commandQueue = [_device newCommandQueue];
     }
 
     return self;
 }
 
-/// Called whenever view changes orientation or is resized
-- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-{
-    // Save the size of the drawable as we'll pass these
-    //   values to our vertex shader when we draw
+// Вызывается при смене ориентации
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
     _viewportSize.x = size.width;
     _viewportSize.y = size.height;
 }
 
-/// Called whenever the view needs to render a frame
-- (void)drawInMTKView:(nonnull MTKView *)view
-{
+// Вызывается для рендеринга сцены
+- (void)drawInMTKView:(nonnull MTKView *)view {
     static const AAPLVertex quadVertices[] =
     {
-        //Pixel Positions, Texture Coordinates
+        // Позиции и текстурные координаты
         { {  250,  -250 }, { 1.f, 0.f } },
         { { -250,  -250 }, { 0.f, 0.f } },
         { { -250,   250 }, { 0.f, 1.f } },
@@ -188,38 +173,44 @@ Implementation of renderer class which performs Metal setup and per frame render
         { {  250,   250 }, { 1.f, 1.f } },
     };
 
-    // Create a new command buffer for each render pass to the current drawable
+    // Создаем буффер комманд
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
 
+    // Создаем энкодер комманд вычисления
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
 
+    // Выставляем пайплайн
     [computeEncoder setComputePipelineState:_computePipelineState];
 
+    // Выставляем входную текстуру по индексу 0
     [computeEncoder setTexture:_inputTexture
                        atIndex:AAPLTextureIndexInput];
-
+    
+    // Выставляем выходную текстуру по индексу 1
     [computeEncoder setTexture:_outputTexture
                        atIndex:AAPLTextureIndexOutput];
-
+    
+    // Выставляем количество тредгрупп + количество потоков на группу
     [computeEncoder dispatchThreadgroups:_threadgroupCount
                    threadsPerThreadgroup:_threadgroupSize];
-
+    
+    // Завершаем конвертацию
     [computeEncoder endEncoding];
 
-    // Obtain a renderPassDescriptor generated from the view's drawable textures
+    
+    // Получаем дескриптор рендеринга
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
 
-    if(renderPassDescriptor != nil)
-    {
-        // Create a render command encoder so we can render into something
-        id<MTLRenderCommandEncoder> renderEncoder =
-        [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    if(renderPassDescriptor != nil){
+        // Создаем энкодер для рендеринга
+        id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         renderEncoder.label = @"MyRenderEncoder";
 
-        // Set the region of the drawable to which we'll draw.
+        // Выставляем вьюпорт
         [renderEncoder setViewport:(MTLViewport){0.0, 0.0, _viewportSize.x, _viewportSize.y, -1.0, 1.0 }];
-
+        
+        // Выставляем пайплайн отрисовки
         [renderEncoder setRenderPipelineState:_renderPipelineState];
 
         // We call -[MTLRenderCommandEncoder setVertexBytes:length:atIndex:] tp send data from our
@@ -234,6 +225,8 @@ Implementation of renderer class which performs Metal setup and per frame render
         //   The AAPLVertexInputIndexVertices enum value corresponds to the 'vertexArray' argument
         //   in our 'vertexShader' function because its buffer attribute qualifier also uses
         //   AAPLVertexInputIndexVertices for its index
+        
+        // Вытавляем вершинный буффер по индексу 0, описание вершин
         [renderEncoder setVertexBytes:quadVertices
                                length:sizeof(quadVertices)
                               atIndex:AAPLVertexInputIndexVertices];
@@ -243,14 +236,17 @@ Implementation of renderer class which performs Metal setup and per frame render
         ///  corresponds to the 'viewportSizePointer' argument in our 'vertexShader' function
         //   because its buffer attribute qualifier also uses AAPLVertexInputIndexViewportSize
         //   for its index
+        
+        // Вытавляем вершинный буффер по индексу 1, юниформ размера вьюпорта
         [renderEncoder setVertexBytes:&_viewportSize
                                length:sizeof(_viewportSize)
                               atIndex:AAPLVertexInputIndexViewportSize];
-
+        
+        // Выставляем текстуру для отрисовки
         [renderEncoder setFragmentTexture:_outputTexture
                                   atIndex:AAPLTextureIndexOutput];
 
-        // Draw the vertices of our triangles
+        // Вызываем отрисовку
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                           vertexStart:0
                           vertexCount:6];

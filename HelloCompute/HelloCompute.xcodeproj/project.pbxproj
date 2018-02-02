@@ -64,7 +64,7 @@
 		3AF7E9C81EB64A46003BB06D /* HelloCompute.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloCompute.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF7E9E21EB64A46003BB06D /* HelloCompute.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloCompute.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AF7E9F81EB64A46003BB06D /* HelloCompute.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloCompute.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		494CC39608EE44EC6D651602 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
+		494CC39608EE44EC6D651602 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,7 +198,6 @@
 			children = (
 				494CC39608EE44EC6D651602 /* LICENSE.txt */,
 			);
-			name = LICENSE;
 			path = LICENSE;
 			sourceTree = "<group>";
 		};
@@ -267,7 +266,8 @@
 				TargetAttributes = {
 					3AF7E9C71EB64A46003BB06D = {
 						CreatedOnToolsVersion = 8.3.2;
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = UJMSA9U58F;
+						ProvisioningStyle = Manual;
 					};
 					3AF7E9E11EB64A46003BB06D = {
 						CreatedOnToolsVersion = 8.3.2;
@@ -499,17 +499,19 @@
 			baseConfigurationReference = 33F9F0E8342CD584EB604E7A /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					TARGET_IOS,
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = Application/iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.HelloCompute${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = HelloCompute;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE = "48f30f78-9f68-4959-a279-67073479eadd";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -520,14 +522,16 @@
 			baseConfigurationReference = 33F9F0E8342CD584EB604E7A /* SampleCode.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
 				GCC_PREPROCESSOR_DEFINITIONS = TARGET_IOS;
 				INFOPLIST_FILE = Application/iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.HelloCompute${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = HelloCompute;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE = "48f30f78-9f68-4959-a279-67073479eadd";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
