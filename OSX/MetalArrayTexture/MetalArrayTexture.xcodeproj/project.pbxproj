@@ -1,0 +1,588 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AF02EFA21C18B85C004E6354 /* AAPLMtkView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF02EFA11C18B85C004E6354 /* AAPLMtkView.m */; };
+		AF02EFA31C18C3D4004E6354 /* AAPLMtkView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF02EFA11C18B85C004E6354 /* AAPLMtkView.m */; };
+		AF533B841BEA8B0B0016028D /* AAPLAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF533B821BEA8B0B0016028D /* AAPLAppDelegate.mm */; };
+		AF533B851BEA8B0B0016028D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF533B831BEA8B0B0016028D /* main.m */; };
+		AF533B881BEA8B410016028D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AF533B861BEA8B410016028D /* Main.storyboard */; };
+		AF533B8C1BEA8B5B0016028D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF533B891BEA8B5B0016028D /* Images.xcassets */; };
+		AF533B8E1BEA8B5B0016028D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = AF533B8B1BEA8B5B0016028D /* LaunchScreen.xib */; };
+		AF55C27A1BE181560080D49E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF55C2791BE181560080D49E /* MetalKit.framework */; };
+		AF871B5F1B97BFF800005669 /* AAPLArrayTexture.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B441B97BFF800005669 /* AAPLArrayTexture.mm */; };
+		AF871B601B97BFF800005669 /* AAPLRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B461B97BFF800005669 /* AAPLRenderer.mm */; };
+		AF871B611B97BFF800005669 /* AAPLTerrain.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B481B97BFF800005669 /* AAPLTerrain.mm */; };
+		AF871B621B97BFF800005669 /* AAPLTransforms.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B4A1B97BFF800005669 /* AAPLTransforms.mm */; };
+		AF871B641B97BFF800005669 /* AAPLViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B4E1B97BFF800005669 /* AAPLViewController.mm */; };
+		AF871B681B97BFF800005669 /* dirt.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B531B97BFF800005669 /* dirt.jpg */; };
+		AF871B691B97BFF800005669 /* GeoUtils.c in Sources */ = {isa = PBXBuildFile; fileRef = AF871B541B97BFF800005669 /* GeoUtils.c */; };
+		AF871B6A1B97BFF800005669 /* grass.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B561B97BFF800005669 /* grass.jpg */; };
+		AF871B6D1B97BFF800005669 /* rock.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B591B97BFF800005669 /* rock.jpg */; };
+		AF871B6E1B97BFF800005669 /* snow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B5A1B97BFF800005669 /* snow.jpg */; };
+		AF871B6F1B97BFF800005669 /* texturedTerrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = AF871B5B1B97BFF800005669 /* texturedTerrain.metal */; };
+		AF871B741B97C0EA00005669 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF871B731B97C0EA00005669 /* QuartzCore.framework */; };
+		AF871B761B97C0F100005669 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF871B751B97C0F100005669 /* Metal.framework */; };
+		AF87947A1BEA950A00D3E399 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF8794791BEA950A00D3E399 /* MetalKit.framework */; };
+		AF8794A91BEA9DA400D3E399 /* AAPLArrayTexture.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B441B97BFF800005669 /* AAPLArrayTexture.mm */; };
+		AF8794AB1BEA9DA400D3E399 /* AAPLRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B461B97BFF800005669 /* AAPLRenderer.mm */; };
+		AF8794AD1BEA9DA400D3E399 /* AAPLViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B4E1B97BFF800005669 /* AAPLViewController.mm */; };
+		AF8794AE1BEA9DA400D3E399 /* texturedTerrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = AF871B5B1B97BFF800005669 /* texturedTerrain.metal */; };
+		AF8794AF1BEA9DBC00D3E399 /* AAPLTerrain.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B481B97BFF800005669 /* AAPLTerrain.mm */; };
+		AF8794B01BEA9DC000D3E399 /* GeoUtils.c in Sources */ = {isa = PBXBuildFile; fileRef = AF871B541B97BFF800005669 /* GeoUtils.c */; };
+		AF8794B11BEA9DC300D3E399 /* AAPLAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AF533B941BEA8F710016028D /* AAPLAppDelegate.m */; };
+		AF8794B21BEA9DC600D3E399 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF533B951BEA8F710016028D /* main.m */; };
+		AF8794B31BEA9DDC00D3E399 /* AAPLTransforms.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF871B4A1B97BFF800005669 /* AAPLTransforms.mm */; };
+		AF8794B41BEA9DF000D3E399 /* dirt.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B531B97BFF800005669 /* dirt.jpg */; };
+		AF8794B51BEA9DF300D3E399 /* grass.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B561B97BFF800005669 /* grass.jpg */; };
+		AF8794B61BEA9DF600D3E399 /* snow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B5A1B97BFF800005669 /* snow.jpg */; };
+		AF8794B71BEA9DFA00D3E399 /* rock.jpg in Resources */ = {isa = PBXBuildFile; fileRef = AF871B591B97BFF800005669 /* rock.jpg */; };
+		AF8794B81BEA9E0100D3E399 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AF533B9F1BEA90DF0016028D /* Main.storyboard */; };
+		AF8794B91BEA9E0400D3E399 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF533B9B1BEA90B80016028D /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AF02EFA01C18B85C004E6354 /* AAPLMtkView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLMtkView.h; sourceTree = "<group>"; };
+		AF02EFA11C18B85C004E6354 /* AAPLMtkView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AAPLMtkView.m; sourceTree = "<group>"; };
+		AF533B811BEA8B0B0016028D /* AAPLAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AAPLAppDelegate.h; path = iOS/AAPLAppDelegate.h; sourceTree = "<group>"; };
+		AF533B821BEA8B0B0016028D /* AAPLAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AAPLAppDelegate.mm; path = iOS/AAPLAppDelegate.mm; sourceTree = "<group>"; };
+		AF533B831BEA8B0B0016028D /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = iOS/main.m; sourceTree = "<group>"; };
+		AF533B871BEA8B410016028D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = iOS/Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		AF533B891BEA8B5B0016028D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = iOS/Images.xcassets; sourceTree = "<group>"; };
+		AF533B8A1BEA8B5B0016028D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = iOS/Info.plist; sourceTree = "<group>"; };
+		AF533B8B1BEA8B5B0016028D /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = LaunchScreen.xib; path = iOS/LaunchScreen.xib; sourceTree = "<group>"; };
+		AF533B931BEA8F710016028D /* AAPLAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AAPLAppDelegate.h; path = OSX/AAPLAppDelegate.h; sourceTree = "<group>"; };
+		AF533B941BEA8F710016028D /* AAPLAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AAPLAppDelegate.m; path = OSX/AAPLAppDelegate.m; sourceTree = "<group>"; };
+		AF533B951BEA8F710016028D /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = OSX/main.m; sourceTree = "<group>"; };
+		AF533B9B1BEA90B80016028D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = OSX/Assets.xcassets; sourceTree = "<group>"; };
+		AF533B9C1BEA90B80016028D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = OSX/Info.plist; sourceTree = "<group>"; };
+		AF533BA01BEA90DF0016028D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = OSX/Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		AF533BA61BEA923E0016028D /* MetalArrayTexture-OSX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MetalArrayTexture-OSX.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF55C2791BE181560080D49E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		AF871AFC1B97BF6C00005669 /* MetalArrayTexture-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MetalArrayTexture-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF871B431B97BFF800005669 /* AAPLArrayTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLArrayTexture.h; sourceTree = "<group>"; };
+		AF871B441B97BFF800005669 /* AAPLArrayTexture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AAPLArrayTexture.mm; sourceTree = "<group>"; };
+		AF871B451B97BFF800005669 /* AAPLRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLRenderer.h; sourceTree = "<group>"; };
+		AF871B461B97BFF800005669 /* AAPLRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AAPLRenderer.mm; sourceTree = "<group>"; };
+		AF871B471B97BFF800005669 /* AAPLTerrain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLTerrain.h; sourceTree = "<group>"; };
+		AF871B481B97BFF800005669 /* AAPLTerrain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AAPLTerrain.mm; sourceTree = "<group>"; };
+		AF871B491B97BFF800005669 /* AAPLTransforms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLTransforms.h; sourceTree = "<group>"; };
+		AF871B4A1B97BFF800005669 /* AAPLTransforms.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AAPLTransforms.mm; sourceTree = "<group>"; };
+		AF871B4D1B97BFF800005669 /* AAPLViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLViewController.h; sourceTree = "<group>"; };
+		AF871B4E1B97BFF800005669 /* AAPLViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AAPLViewController.mm; sourceTree = "<group>"; };
+		AF871B531B97BFF800005669 /* dirt.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dirt.jpg; sourceTree = "<group>"; };
+		AF871B541B97BFF800005669 /* GeoUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GeoUtils.c; sourceTree = "<group>"; };
+		AF871B551B97BFF800005669 /* GeoUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GeoUtils.h; sourceTree = "<group>"; };
+		AF871B561B97BFF800005669 /* grass.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grass.jpg; sourceTree = "<group>"; };
+		AF871B591B97BFF800005669 /* rock.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = rock.jpg; sourceTree = "<group>"; };
+		AF871B5A1B97BFF800005669 /* snow.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = snow.jpg; sourceTree = "<group>"; };
+		AF871B5B1B97BFF800005669 /* texturedTerrain.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = texturedTerrain.metal; sourceTree = "<group>"; };
+		AF871B731B97C0EA00005669 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		AF871B751B97C0F100005669 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		AF8794791BEA950A00D3E399 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
+		AFA9CBFA1C3B1FBD00351C20 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AF533BA31BEA923E0016028D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF87947A1BEA950A00D3E399 /* MetalKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF871AF91B97BF6C00005669 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF55C27A1BE181560080D49E /* MetalKit.framework in Frameworks */,
+				AF871B761B97C0F100005669 /* Metal.framework in Frameworks */,
+				AF871B741B97C0EA00005669 /* QuartzCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AF533B8F1BEA8B620016028D /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				AF533B8B1BEA8B5B0016028D /* LaunchScreen.xib */,
+				AF533B861BEA8B410016028D /* Main.storyboard */,
+				AF533B891BEA8B5B0016028D /* Images.xcassets */,
+				AF533B8A1BEA8B5B0016028D /* Info.plist */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		AF533B921BEA8F3D0016028D /* OSX */ = {
+			isa = PBXGroup;
+			children = (
+				AF533B931BEA8F710016028D /* AAPLAppDelegate.h */,
+				AF533B941BEA8F710016028D /* AAPLAppDelegate.m */,
+				AF533B951BEA8F710016028D /* main.m */,
+			);
+			name = OSX;
+			sourceTree = "<group>";
+		};
+		AF533B9A1BEA909B0016028D /* OSX */ = {
+			isa = PBXGroup;
+			children = (
+				AF533B9F1BEA90DF0016028D /* Main.storyboard */,
+				AF533B9B1BEA90B80016028D /* Assets.xcassets */,
+				AF533B9C1BEA90B80016028D /* Info.plist */,
+			);
+			name = OSX;
+			sourceTree = "<group>";
+		};
+		AF871AF31B97BF6C00005669 = {
+			isa = PBXGroup;
+			children = (
+				AFA9CBFA1C3B1FBD00351C20 /* README.md */,
+				AF871AFE1B97BF6C00005669 /* MetalArrayTexture */,
+				AF871B771B97C10F00005669 /* Frameworks */,
+				AF871AFD1B97BF6C00005669 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AF871AFD1B97BF6C00005669 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AF871AFC1B97BF6C00005669 /* MetalArrayTexture-iOS.app */,
+				AF533BA61BEA923E0016028D /* MetalArrayTexture-OSX.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AF871AFE1B97BF6C00005669 /* MetalArrayTexture */ = {
+			isa = PBXGroup;
+			children = (
+				AF871B431B97BFF800005669 /* AAPLArrayTexture.h */,
+				AF871B441B97BFF800005669 /* AAPLArrayTexture.mm */,
+				AF871B451B97BFF800005669 /* AAPLRenderer.h */,
+				AF871B461B97BFF800005669 /* AAPLRenderer.mm */,
+				AF871B4D1B97BFF800005669 /* AAPLViewController.h */,
+				AF871B4E1B97BFF800005669 /* AAPLViewController.mm */,
+				AF02EFA01C18B85C004E6354 /* AAPLMtkView.h */,
+				AF02EFA11C18B85C004E6354 /* AAPLMtkView.m */,
+				AF871B5B1B97BFF800005669 /* texturedTerrain.metal */,
+				AF871B781B97C17300005669 /* Terrain */,
+				AF871B791B97C1B500005669 /* Math */,
+				AF871B7A1B97C1EF00005669 /* iOS */,
+				AF533B921BEA8F3D0016028D /* OSX */,
+				AF871AFF1B97BF6C00005669 /* Supporting Files */,
+			);
+			path = MetalArrayTexture;
+			sourceTree = "<group>";
+		};
+		AF871AFF1B97BF6C00005669 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				AF533B8F1BEA8B620016028D /* iOS */,
+				AF533B9A1BEA909B0016028D /* OSX */,
+				AF871B531B97BFF800005669 /* dirt.jpg */,
+				AF871B561B97BFF800005669 /* grass.jpg */,
+				AF871B5A1B97BFF800005669 /* snow.jpg */,
+				AF871B591B97BFF800005669 /* rock.jpg */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		AF871B771B97C10F00005669 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AF8794791BEA950A00D3E399 /* MetalKit.framework */,
+				AF55C2791BE181560080D49E /* MetalKit.framework */,
+				AF871B751B97C0F100005669 /* Metal.framework */,
+				AF871B731B97C0EA00005669 /* QuartzCore.framework */,
+			);
+			name = Frameworks;
+			path = MetalArrayTexture;
+			sourceTree = "<group>";
+		};
+		AF871B781B97C17300005669 /* Terrain */ = {
+			isa = PBXGroup;
+			children = (
+				AF871B471B97BFF800005669 /* AAPLTerrain.h */,
+				AF871B481B97BFF800005669 /* AAPLTerrain.mm */,
+				AF871B541B97BFF800005669 /* GeoUtils.c */,
+				AF871B551B97BFF800005669 /* GeoUtils.h */,
+			);
+			name = Terrain;
+			sourceTree = "<group>";
+		};
+		AF871B791B97C1B500005669 /* Math */ = {
+			isa = PBXGroup;
+			children = (
+				AF871B491B97BFF800005669 /* AAPLTransforms.h */,
+				AF871B4A1B97BFF800005669 /* AAPLTransforms.mm */,
+			);
+			name = Math;
+			sourceTree = "<group>";
+		};
+		AF871B7A1B97C1EF00005669 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				AF533B811BEA8B0B0016028D /* AAPLAppDelegate.h */,
+				AF533B821BEA8B0B0016028D /* AAPLAppDelegate.mm */,
+				AF533B831BEA8B0B0016028D /* main.m */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AF533BA51BEA923E0016028D /* MetalArrayTexture-OSX */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF533BBA1BEA923E0016028D /* Build configuration list for PBXNativeTarget "MetalArrayTexture-OSX" */;
+			buildPhases = (
+				AF533BA21BEA923E0016028D /* Sources */,
+				AF533BA31BEA923E0016028D /* Frameworks */,
+				AF533BA41BEA923E0016028D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "MetalArrayTexture-OSX";
+			productName = "MetalArrayTexture-OSX";
+			productReference = AF533BA61BEA923E0016028D /* MetalArrayTexture-OSX.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AF871AFB1B97BF6C00005669 /* MetalArrayTexture-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF871B1F1B97BF6C00005669 /* Build configuration list for PBXNativeTarget "MetalArrayTexture-iOS" */;
+			buildPhases = (
+				AF871AF81B97BF6C00005669 /* Sources */,
+				AF871AF91B97BF6C00005669 /* Frameworks */,
+				AF871AFA1B97BF6C00005669 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "MetalArrayTexture-iOS";
+			productName = MetalArrayTexture;
+			productReference = AF871AFC1B97BF6C00005669 /* MetalArrayTexture-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AF871AF41B97BF6C00005669 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0700;
+				ORGANIZATIONNAME = "Lili Sang";
+				TargetAttributes = {
+					AF533BA51BEA923E0016028D = {
+						CreatedOnToolsVersion = 7.1;
+					};
+					AF871AFB1B97BF6C00005669 = {
+						CreatedOnToolsVersion = 6.4;
+						DevelopmentTeam = UJMSA9U58F;
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = AF871AF71B97BF6C00005669 /* Build configuration list for PBXProject "MetalArrayTexture" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AF871AF31B97BF6C00005669;
+			productRefGroup = AF871AFD1B97BF6C00005669 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AF871AFB1B97BF6C00005669 /* MetalArrayTexture-iOS */,
+				AF533BA51BEA923E0016028D /* MetalArrayTexture-OSX */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AF533BA41BEA923E0016028D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF8794B81BEA9E0100D3E399 /* Main.storyboard in Resources */,
+				AF8794B91BEA9E0400D3E399 /* Assets.xcassets in Resources */,
+				AF8794B41BEA9DF000D3E399 /* dirt.jpg in Resources */,
+				AF8794B51BEA9DF300D3E399 /* grass.jpg in Resources */,
+				AF8794B61BEA9DF600D3E399 /* snow.jpg in Resources */,
+				AF8794B71BEA9DFA00D3E399 /* rock.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF871AFA1B97BF6C00005669 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF533B8C1BEA8B5B0016028D /* Images.xcassets in Resources */,
+				AF871B6A1B97BFF800005669 /* grass.jpg in Resources */,
+				AF871B6E1B97BFF800005669 /* snow.jpg in Resources */,
+				AF533B881BEA8B410016028D /* Main.storyboard in Resources */,
+				AF871B6D1B97BFF800005669 /* rock.jpg in Resources */,
+				AF871B681B97BFF800005669 /* dirt.jpg in Resources */,
+				AF533B8E1BEA8B5B0016028D /* LaunchScreen.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AF533BA21BEA923E0016028D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF02EFA31C18C3D4004E6354 /* AAPLMtkView.m in Sources */,
+				AF8794B31BEA9DDC00D3E399 /* AAPLTransforms.mm in Sources */,
+				AF8794B21BEA9DC600D3E399 /* main.m in Sources */,
+				AF8794A91BEA9DA400D3E399 /* AAPLArrayTexture.mm in Sources */,
+				AF8794AB1BEA9DA400D3E399 /* AAPLRenderer.mm in Sources */,
+				AF8794AD1BEA9DA400D3E399 /* AAPLViewController.mm in Sources */,
+				AF8794AF1BEA9DBC00D3E399 /* AAPLTerrain.mm in Sources */,
+				AF8794B01BEA9DC000D3E399 /* GeoUtils.c in Sources */,
+				AF8794B11BEA9DC300D3E399 /* AAPLAppDelegate.m in Sources */,
+				AF8794AE1BEA9DA400D3E399 /* texturedTerrain.metal in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AF871AF81B97BF6C00005669 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF533B841BEA8B0B0016028D /* AAPLAppDelegate.mm in Sources */,
+				AF02EFA21C18B85C004E6354 /* AAPLMtkView.m in Sources */,
+				AF871B621B97BFF800005669 /* AAPLTransforms.mm in Sources */,
+				AF871B641B97BFF800005669 /* AAPLViewController.mm in Sources */,
+				AF871B6F1B97BFF800005669 /* texturedTerrain.metal in Sources */,
+				AF871B601B97BFF800005669 /* AAPLRenderer.mm in Sources */,
+				AF871B691B97BFF800005669 /* GeoUtils.c in Sources */,
+				AF871B5F1B97BFF800005669 /* AAPLArrayTexture.mm in Sources */,
+				AF533B851BEA8B0B0016028D /* main.m in Sources */,
+				AF871B611B97BFF800005669 /* AAPLTerrain.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AF533B861BEA8B410016028D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AF533B871BEA8B410016028D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		AF533B9F1BEA90DF0016028D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AF533BA01BEA90DF0016028D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AF533BBB1BEA923E0016028D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MetalArrayTexture/OSX/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		AF533BBC1BEA923E0016028D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MetalArrayTexture/OSX/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		AF871B1D1B97BF6C00005669 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF871B1E1B97BF6C00005669 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AF871B201B97BF6C00005669 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TARGET_IOS,
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = MetalArrayTexture/iOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+			};
+			name = Debug;
+		};
+		AF871B211B97BF6C00005669 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = UJMSA9U58F;
+				GCC_PREPROCESSOR_DEFINITIONS = TARGET_IOS;
+				INFOPLIST_FILE = MetalArrayTexture/iOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AF533BBA1BEA923E0016028D /* Build configuration list for PBXNativeTarget "MetalArrayTexture-OSX" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF533BBB1BEA923E0016028D /* Debug */,
+				AF533BBC1BEA923E0016028D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF871AF71B97BF6C00005669 /* Build configuration list for PBXProject "MetalArrayTexture" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF871B1D1B97BF6C00005669 /* Debug */,
+				AF871B1E1B97BF6C00005669 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF871B1F1B97BF6C00005669 /* Build configuration list for PBXNativeTarget "MetalArrayTexture-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF871B201B97BF6C00005669 /* Debug */,
+				AF871B211B97BF6C00005669 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AF871AF41B97BF6C00005669 /* Project object */;
+}
