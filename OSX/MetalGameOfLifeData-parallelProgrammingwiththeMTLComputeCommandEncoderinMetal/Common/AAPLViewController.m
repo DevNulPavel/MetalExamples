@@ -67,20 +67,20 @@ The view controller class for the Game of Life sample. Manages an MTKView for di
 
 #pragma mark - Interaction (Touch / Mouse) Handling
 
-// TODO: ???
 // Конверт из координат вьюшки в координаты сетки
 - (CGPoint)locationInGridForLocationInView:(CGPoint)point {
     CGSize viewSize = self.view.frame.size;
-    CGFloat normalizedWidth = point.x / viewSize.width;
-    CGFloat normalizedHeight = point.y / viewSize.height;
-    CGFloat gridX = round(normalizedWidth * self.renderer.gridSize.width);
-    CGFloat gridY = round(normalizedHeight * self.renderer.gridSize.height);
+    // Получаем нормализованное значение в диапазоне от 0 до 1
+    CGFloat normalizedX = point.x / viewSize.width;
+    CGFloat normalizedY = point.y / viewSize.height;
+    // Получаем значение точки в координатах сетки
+    CGFloat gridX = round(normalizedX * self.renderer.gridSize.width);
+    CGFloat gridY = round(normalizedY * self.renderer.gridSize.height);
     return CGPointMake(gridX, gridY);
 }
 
 - (void)activateRandomCellsForPoint:(CGPoint)point {
-    // Translate between the coordinate space of the view and the game grid,
-    // then forward the request to the compute phase to do the real work
+    // Переводим точку в координаты сетки игры и отправляем тач на обработку
     CGPoint gridLocation = [self locationInGridForLocationInView:point];
     [self.renderer activateRandomCellsInNeighborhoodOfCell:gridLocation];
 }
@@ -88,14 +88,12 @@ The view controller class for the Game of Life sample. Manages an MTKView for di
 #if TARGET_OS_IPHONE
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     for (UITouch *touch in touches){
-        // Turn on random cells in the vicinity of the touched location
         CGPoint location = [touch locationInView:self.view];
         [self activateRandomCellsForPoint:location];
     }
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     for (UITouch *touch in touches){
-        // Turn on random cells in the vicinity of the touched location
         CGPoint location = [touch locationInView:self.view];
         [self activateRandomCellsForPoint:location];
     }

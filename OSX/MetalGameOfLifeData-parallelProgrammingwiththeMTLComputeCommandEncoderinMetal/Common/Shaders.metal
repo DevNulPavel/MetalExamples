@@ -1,11 +1,11 @@
 /*
-Copyright (C) 2016 Apple Inc. All Rights Reserved.
-See LICENSE.txt for this sample’s licensing information
-
-Abstract:
-Shader functions for the Game of Life sample. Define the core of the GPU-based simulation
-    and describe how to draw the current game state to the screen
-*/
+ Copyright (C) 2016 Apple Inc. All Rights Reserved.
+ See LICENSE.txt for this sample’s licensing information
+ 
+ Abstract:
+ Shader functions for the Game of Life sample. Define the core of the GPU-based simulation
+ and describe how to draw the current game state to the screen
+ */
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -88,20 +88,17 @@ kernel void activate_random_neighbors(texture2d<uint, access::write> writeTextur
 kernel void game_of_life(texture2d<uint, access::sample> readTexture [[texture(0)]],
                          texture2d<uint, access::write> writeTexture [[texture(1)]],
                          sampler wrapSampler [[sampler(0)]],
-                         ushort2 gridPosition [[thread_position_in_grid]]) {
-    
+                         ushort2 gridPosition [[thread_position_in_grid]]){
     // Высота и ширина текстуры
     ushort width = readTexture.get_width();
     ushort height = readTexture.get_height();
     float2 bounds(width, height);
-    
     // Позиция в сетке
     float2 position = float2(gridPosition);
     
     // Не выполняем обновление или запись, если мы вылезли за границы текстуры
-    if ((gridPosition.x < width) && (gridPosition.y < height)) {
+    if((gridPosition.x < width) && (gridPosition.y < height)) {
         // Подсчитываем количество соседних ячеек, которые являются живыми
-        // TODO: А как же параллельность???
         ushort neighbors = 0;
         for (int i = 0; i < 8; ++i) {
             // Sample from the current game state texture, wrapping around edges if necessary
@@ -109,16 +106,16 @@ kernel void game_of_life(texture2d<uint, access::sample> readTexture [[texture(0
             ushort cellValue = readTexture.sample(wrapSampler, coords).r;
             neighbors += (cellValue == kCellValueAlive) ? 1 : 0;
         }
-
+        
         // Получаем текущее значение в буффере
         ushort deadFrames = readTexture.read(uint2(position)).r;
         
         /*
-            The rules of the Game of Life:
-              Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-              Any live cell with two or three live neighbours lives on to the next generation.
-              Any live cell with more than three live neighbours dies, as if by over-population.
-              Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+         The rules of the Game of Life:
+         Any live cell with fewer than two live neighbours dies, as if caused by under-population.
+         Any live cell with two or three live neighbours lives on to the next generation.
+         Any live cell with more than three live neighbours dies, as if by over-population.
+         Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
          */
         bool alive = (deadFrames == 0 && (neighbors == 2 || neighbors == 3)) || (deadFrames > 0 && (neighbors == 3));
         
@@ -129,3 +126,4 @@ kernel void game_of_life(texture2d<uint, access::sample> readTexture [[texture(0
         writeTexture.write(cellValue, uint2(position));
     }
 }
+
