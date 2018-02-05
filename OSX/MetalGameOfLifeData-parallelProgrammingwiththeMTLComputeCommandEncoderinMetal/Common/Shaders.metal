@@ -68,12 +68,13 @@ static float hash(int2 v){
     return fract(sin(dot(float2(v), float2(12.9898, 78.233))) * 43758.5453);
 }
 
+// https://developer.apple.com/documentation/metal/compute_processing/about_threads_and_threadgroups
 // Вычислительная функция, которая активирует соседей в текстуре
 kernel void activate_random_neighbors(texture2d<uint, access::write> writeTexture [[texture(0)]],
-                                      constant uint2* cellPositions [[buffer(0)]],
-                                      ushort2 gridPosition [[thread_position_in_grid]]) {
-    
-    int2 cellPosition = int2(cellPositions[gridPosition.x]);
+                                      constant uint2* cellPositions [[buffer(0)]], // Буффер с координатами пикселей
+                                      ushort2 gridPosition [[thread_position_in_grid]]) {   // Ширина вычислительной сетки равна количеству точек вычисления
+    int cellPosIndex = gridPosition.x;
+    int2 cellPosition = int2(cellPositions[cellPosIndex]);
     // Итерируемся по соседям конкретной точки
     for (ushort i = 0; i < 8; ++i) {
         // Вычисляем позицию конкретной ячейки
@@ -85,10 +86,11 @@ kernel void activate_random_neighbors(texture2d<uint, access::write> writeTextur
     }
 }
 
+// https://developer.apple.com/documentation/metal/compute_processing/about_threads_and_threadgroups
 kernel void game_of_life(texture2d<uint, access::sample> readTexture [[texture(0)]],
                          texture2d<uint, access::write> writeTexture [[texture(1)]],
                          sampler wrapSampler [[sampler(0)]],
-                         ushort2 gridPosition [[thread_position_in_grid]]){
+                         ushort2 gridPosition [[thread_position_in_grid]]){ // Координаты пикселя в вычислительной сетке (аналог координат в текстуре)
     // Высота и ширина текстуры
     ushort width = readTexture.get_width();
     ushort height = readTexture.get_height();

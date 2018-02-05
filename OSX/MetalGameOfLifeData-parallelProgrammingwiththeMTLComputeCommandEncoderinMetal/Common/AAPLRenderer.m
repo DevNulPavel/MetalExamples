@@ -258,6 +258,9 @@ static const NSInteger kMaxInflightBuffers = 3;
 #pragma mark - Interactivity
 
 - (void)activateRandomCellsInNeighborhoodOfCell:(CGPoint)cell {
+    if (self.activationPoints.count >= 10) {
+        return;
+    }
     // Добавляем в массив обработки точку нажатия, на следующем шаге обработки мы сможем активировать соседей возле этой точки
     [self.activationPoints addObject:[NSValue valueWithBytes:&cell objCType:@encode(CGPoint)]];
 }
@@ -275,7 +278,8 @@ static const NSInteger kMaxInflightBuffers = 3;
 
     // Для обновления игрового состояния мы делим нашу сетку на квадратные тредгруппы
     // и определяем как много нам надо запустить тредгрупп чтобы покрыть всю входную текстуру
-    
+
+    // https://developer.apple.com/documentation/metal/compute_processing/about_threads_and_threadgroups
     // Определяем количество потоков на тредгруппу
     MTLSize threadsPerThreadgroup = MTLSizeMake(16, 16, 1);
     // Вычисляем количество тредгрупп
@@ -304,13 +308,11 @@ static const NSInteger kMaxInflightBuffers = 3;
             cellPositions[i * 2 + 1] = point.y;
         }];
         
-        // Так как мы имеем достаточно малое количество точке, меньше 10, мы можем обработать все из них
-        // в одной единственной тредгруппе.
+        // https://developer.apple.com/documentation/metal/compute_processing/about_threads_and_threadgroups
         
-        // TODO: ???
-        // Since we have only a small number of points (< 10), we can handle all of them
-        // in a single threadgroup. We just make it as wide as the number of points. Each
-        // thread will pick up one position and activate some of its neighbors, randomly.
+        // Так как мы имеем достаточно малое количество точке, меньше 10, мы можем обработать все из них
+        // в одной единственной тредгруппе. Задаем количество потоков на тредгруппу, равное количеству точек.
+        // Количество тредгрупп - 1. Каждый поток будет брать одну позицию по id группы и активировать соседей.
         MTLSize threadsPerThreadgroup = MTLSizeMake(self.activationPoints.count, 1, 1);
         MTLSize threadgroupCount = MTLSizeMake(1, 1, 1);
         
