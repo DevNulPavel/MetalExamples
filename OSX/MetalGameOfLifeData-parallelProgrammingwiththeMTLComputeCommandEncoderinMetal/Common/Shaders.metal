@@ -20,7 +20,7 @@ constant float2 kNeighborDirections[] = {
 };
 
 // Likelihood that a random cell will become alive when interaction happens at an adjacent cell
-constant float kSpawnProbability = 0.6;
+constant float kSpawnProbability = 0.8;
 
 // Константы, обозначающие живую ячейку и конченую
 constant int kCellValueAlive = 0;

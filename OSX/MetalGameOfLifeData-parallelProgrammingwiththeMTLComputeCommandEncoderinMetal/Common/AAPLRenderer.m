@@ -273,11 +273,8 @@ static const NSInteger kMaxInflightBuffers = 3;
     // Создаем энкодер вычислительных комманд
     id<MTLComputeCommandEncoder> commandEncoder = [commandBuffer computeCommandEncoder];
 
-    // TODO:
-    ////
-    // For updating the game state, we divide our grid up into square threadgroups and
-    // determine how many we need to dispatch in order to cover the entire grid
-    ////
+    // Для обновления игрового состояния мы делим нашу сетку на квадратные тредгруппы
+    // и определяем как много нам надо запустить тредгрупп чтобы покрыть всю входную текстуру
     
     // Определяем количество потоков на тредгруппу
     MTLSize threadsPerThreadgroup = MTLSizeMake(16, 16, 1);
@@ -293,15 +290,13 @@ static const NSInteger kMaxInflightBuffers = 3;
     [commandEncoder setSamplerState:self.samplerState atIndex:0];
     [commandEncoder dispatchThreadgroups:threadgroupCount threadsPerThreadgroup:threadsPerThreadgroup];
     
-    // If the user has interacted with the simulation, we now need to dispatch a smaller
-    // amount of work to activate random cells near the points they have clicked/touched
+
+    // Если у юзера есть точки для обработки после тача в очереди,
+    // активируем наши точки на GPU
     if (self.activationPoints.count > 0){
-        // We need the positions to be in a buffer in order to read them in the compute
-        // kernel, but since the data is so small, creating a Metal buffer explicitly is
-        // unnecessary. Instead, we copy the positions into a temporary array, then
-        // use the setBytes:length:atIndex: method to pass them in via an implicit buffer.
+        // Создаем данные с точками для передачи в шейдер
         size_t byteCount = self.activationPoints.count * 2 * sizeof(uint32_t);
-        uint32_t *cellPositions = (uint32_t *)malloc(byteCount);
+        uint32_t* cellPositions = (uint32_t *)malloc(byteCount);
         [self.activationPoints enumerateObjectsUsingBlock:^(NSValue *value, NSUInteger i, BOOL *stop) {
             CGPoint point;
             [value getValue:&point];
@@ -309,6 +304,10 @@ static const NSInteger kMaxInflightBuffers = 3;
             cellPositions[i * 2 + 1] = point.y;
         }];
         
+        // Так как мы имеем достаточно малое количество точке, меньше 10, мы можем обработать все из них
+        // в одной единственной тредгруппе.
+        
+        // TODO: ???
         // Since we have only a small number of points (< 10), we can handle all of them
         // in a single threadgroup. We just make it as wide as the number of points. Each
         // thread will pick up one position and activate some of its neighbors, randomly.
