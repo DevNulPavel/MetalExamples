@@ -20,7 +20,7 @@ constant float2 kNeighborDirections[] = {
 };
 
 // Likelihood that a random cell will become alive when interaction happens at an adjacent cell
-constant float kSpawnProbability = 0.8;
+constant float kSpawnProbability = 0.9;
 
 // Константы, обозначающие живую ячейку и конченую
 constant int kCellValueAlive = 0;
@@ -75,14 +75,21 @@ kernel void activate_random_neighbors(texture2d<uint, access::write> writeTextur
                                       ushort2 gridPosition [[thread_position_in_grid]]) {   // Ширина вычислительной сетки равна количеству точек вычисления
     int cellPosIndex = gridPosition.x;
     int2 cellPosition = int2(cellPositions[cellPosIndex]);
+    
+    ushort width = writeTexture.get_width();
+    ushort height = writeTexture.get_height();
+    
     // Итерируемся по соседям конкретной точки
     for (ushort i = 0; i < 8; ++i) {
         // Вычисляем позицию конкретной ячейки
         int2 neighborPosition = cellPosition + int2(kNeighborDirections[i]);
-        // Получаем конкретное случайное значение
-        ushort cellValue = (hash(neighborPosition) < kSpawnProbability) ? kCellValueAlive : kCellValueDead;
-        // Пишем полученое значение в текстуру
-        writeTexture.write(cellValue, uint2(neighborPosition));
+        // Проверяем, не вышли ли мы за границу
+        if((neighborPosition.x >= 0) && (neighborPosition.y >= 0) && (neighborPosition.x < width) && (neighborPosition.y < height)) {
+            // Получаем конкретное случайное значение
+            ushort cellValue = (hash(neighborPosition) < kSpawnProbability) ? kCellValueAlive : kCellValueDead;
+            // Пишем полученое значение в текстуру
+            writeTexture.write(cellValue, uint2(neighborPosition));
+        }
     }
 }
 
@@ -119,6 +126,11 @@ kernel void game_of_life(texture2d<uint, access::sample> readTexture [[texture(0
          Any live cell with more than three live neighbours dies, as if by over-population.
          Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
          */
+        /*
+         Распределение живых клеток в начале игры называется первым поколением. Каждое следующее поколение рассчитывается на основе предыдущего по таким правилам:
+            - в пустой (мёртвой) клетке, рядом с которой ровно три живые клетки, зарождается жизнь;
+            - если у живой клетки есть две или три живые соседки, то эта клетка продолжает жить; в противном случае, если соседей меньше двух или больше трёх, клетка умирает («от одиночества» или «от перенаселённости»)
+        */
         bool alive = (deadFrames == 0 && (neighbors == 2 || neighbors == 3)) || (deadFrames > 0 && (neighbors == 3));
         
         // Если мы живы, оставляем значение, иначе - увеличиваем количество которых надо мочить??

@@ -149,8 +149,9 @@ static const NSInteger kMaxInflightBuffers = 3;
 }
 
 - (void)reshapeWithDrawableSize:(CGSize)drawableSize {
+    const CGFloat customScale = 4.0f;
     // Select a grid size that matches the size of the view in points
-    CGFloat scale = self.view.layer.contentsScale;
+    CGFloat scale = self.view.layer.contentsScale / customScale;
     MTLSize proposedGridSize = MTLSizeMake(drawableSize.width / scale, drawableSize.height / scale, 1);
     
     if (_gridSize.width != proposedGridSize.width || _gridSize.height != proposedGridSize.height) {
