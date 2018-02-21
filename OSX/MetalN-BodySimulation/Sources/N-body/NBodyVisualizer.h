@@ -12,40 +12,39 @@
 
 @interface NBodyVisualizer : NSObject
 
-// Query to determine if all resources were instantiated
+// Инициализированны ли все необходимые ресурсы??
 @property (readonly) BOOL haveVisualizer;
 
-// Generate all the resources necessary for N-body simulation
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
-
-// Render a frame for N-body simaulation
-@property (nullable, nonatomic, setter=render:) id<CAMetalDrawable> drawable;
-
-// Orthographic projection configuration type
+// Тип ортографической проекции
 @property uint32_t config;
 
 // Coordinate points on the Eunclidean axis of simulation
 @property (nonatomic) simd::float3 axis;
 
-// Aspect ratio
+// Соотношение сторон
 @property (nonatomic) float aspect;
 
 // Total number of frames to be rendered for a N-body simulation type
 @property (nonatomic) uint32_t frames;
 
-// The number of point particels
+// Количество партиклов
 @property (nonatomic) uint32_t particles;
 
-// Texture resolution.  The default is 64x64.
+// Разрешение текстуры - дефолтное 64x64.
 @property (nonatomic) uint32_t texRes;
 
-// Becomes true once all the frames for a simulation type are rendered
+// Выставляется, когда все фреймы симуляции были отрендерены
 @property (readonly) BOOL isComplete;
 
-// Current active simulation type
+// Текущий активный тип симуляции
 @property (readonly) uint32_t active;
 
-// Current frame being rendered
+// Текущий кадр, который рендерится
 @property (readonly) uint32_t frame;
+
+// Создание всех необходимых ресурсов для симуляции
+- (void) acquire:(nullable id<MTLDevice>)device;
+
+- (void)render:(nullable id<CAMetalDrawable>)drawable;
 
 @end

@@ -11,22 +11,19 @@
 
 #ifdef __cplusplus
 
-namespace NBody
-{
-    namespace Compute
-    {
-        struct Prefs
-        {
+namespace NBody{
+    namespace Compute{
+        struct Prefs{
             float  timestep;
             float  damping;
             float  softeningSqr;
             
             unsigned int particles;
-        }; // Prefs
+        };
         
         typedef Prefs Prefs;
-    } // Compute
-} // NBody
+    }
+}
 
 #endif
 

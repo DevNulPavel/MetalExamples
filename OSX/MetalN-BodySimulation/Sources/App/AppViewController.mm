@@ -12,93 +12,79 @@
 
 #import "AppViewController.h"
 
-@implementation AppViewController
-{
+@implementation AppViewController {
 @private
-    // Default Metal system devive
-    id<MTLDevice>  device;
+    // Текущее Metal устройство
+    id<MTLDevice> device;
     
-    // Metal-Kit view
-    MTKView*  mpView;
+    // Текущая вьюшка
+    MTKView* mpView;
     
-    // N-body simulation visualizer object
+    // N-мерный визуализатор
     NBodyVisualizer*  mpVisualizer;
 }
 
-- (void) _update:(nonnull MTKView *)view
-{
+- (void) _update:(nonnull MTKView *)view {
     const CGRect bounds = view.bounds;
     const float  aspect = float(std::abs(bounds.size.width / bounds.size.height));
     
-    // Set the new aspect ratio for the mvp linear transformation matrix
+    // Обновляем соотношение сторон у визуализатора
     mpVisualizer.aspect = aspect;
-} // _update
+}
 
-- (void) mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-{
-    // Update the mvp linear transformation matrix
+- (void) mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
+    // Обновляем трансформы
     [self _update:view];
-} // mtkView
+}
 
-- (void) drawInMTKView:(nonnull MTKView *)view
-{
-    if(view)
-    {
-        @autoreleasepool
-        {
+- (void) drawInMTKView:(nonnull MTKView *)view {
+    if(view){
+        @autoreleasepool {
             [self _update:view];
             
-            // Draw the particles from the N-body simulation
-            mpVisualizer.drawable = view.currentDrawable;
+            // Вызываем отрисовку партиклов для симуляции тела из сеттера
+            [mpVisualizer render:view.currentDrawable];
         }
-    } // if
-} // drawInMTKView
+    }
+}
 
-- (void) didReceiveMemoryWarning
-{
+- (void) didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];
-} // didReceiveMemoryWarning
+}
 
-- (UIStatusBarStyle) preferredStatusBarStyle
-{
+- (UIStatusBarStyle) preferredStatusBarStyle {
     return UIStatusBarStyleLightContent;
-} // preferredStatusBarStyle
+}
 
-- (void) viewDidAppear:(BOOL)animated
-{
+- (void) viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    // Instantiate a new N-body visualizer object
+    // Создание нового обхекта симуляции
     mpVisualizer = [NBodyVisualizer new];
     assert(mpVisualizer);
 
-    // Acquire all the resources for the visualizer object
-    mpVisualizer.device = device;
+    // Выставляем девайс симуляции + происходит инициализация ресурсов
+    [mpVisualizer acquire:device];
     
     // If successful in acquiring resources for the visualizer
     // object, then continue
     assert(mpVisualizer.haveVisualizer);
-} // viewDidAppear
+}
 
-- (void) viewDidLoad
-{
+- (void) viewDidLoad {
     [super viewDidLoad];
     
-    // Acquire a default Metal system device
+    // Получаем стандартный девайс
     device = MTLCreateSystemDefaultDevice();
-    
-    // If this is a valid system device, then continue
     assert(device);
 
-    // Our view should be a Metal-Kit view
-    mpView = static_cast<MTKView *>(self.view);
-    
-    // If this a valid Metal-kit view, then continue
+    // Конвертируем вьюшку к нашему типу
+    mpView = static_cast<MTKView*>(self.view);
     assert(mpView);
     
-    // Metal-kit view requires a Metal device and an app delegate
+    // Настраиваем вьюшку
     mpView.device   = device;
     mpView.delegate = self;
-} // viewDidLoad
+}
 
 @end

@@ -13,8 +13,7 @@
 #import "MetalNBodyRenderStage.h"
 #import "MetalNBodyPresenter.h"
 
-@implementation MetalNBodyPresenter
-{
+@implementation MetalNBodyPresenter {
 @private
     BOOL _haveEncoder;
     BOOL _isEncoded;
@@ -30,12 +29,10 @@
     MetalNBodyComputeStage*  mpCompute;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self){
         _haveEncoder = NO;
         _isEncoded   = NO;
         
@@ -48,7 +45,7 @@
         
         mpRender  = nil;
         mpCompute = nil;
-    } // if
+    }
     
     return self;
 } // init

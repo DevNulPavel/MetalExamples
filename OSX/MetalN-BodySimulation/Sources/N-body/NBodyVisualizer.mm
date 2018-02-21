@@ -18,15 +18,12 @@
 
 #import "NBodyVisualizer.h"
 
-@implementation NBodyVisualizer
-{
+@implementation NBodyVisualizer {
 @private
     BOOL  _haveVisualizer;
     BOOL  _isComplete;
 
     float _aspect;
-    
-    id<CAMetalDrawable> _drawable;
 
     uint32_t _particles;
     uint32_t _frames;
@@ -42,12 +39,10 @@
     MetalNBodyPresenter* mpPresenter;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self){
         _haveVisualizer = NO;
         _isComplete     = NO;
         
@@ -60,183 +55,157 @@
         _active = 0;
         _frame  = 0;
         
-        _device   = nil;
-        _drawable = nil;
-        
         mpProperties = nil;
         mpGenerator  = nil;
         mpPresenter  = nil;
-    } // if
+    }
     
     return self;
-} // init
+}
 
 // Coordinate points on the Eunclidean axis of simulation
-- (void) setAxis:(simd::float3)axis
-{
-    if(mpGenerator)
-    {
+- (void) setAxis:(simd::float3)axis{
+    if(mpGenerator){
         mpGenerator.axis = axis;
-    } // if
-} // setAxis
+    }
+}
 
 // Aspect ratio
-- (void) setAspect:(float)aspect
-{
+- (void) setAspect:(float)aspect {
     float nEPS = NBody::Defaults::kTolerance;
     
     _aspect = CM::isLT(nEPS, aspect) ? aspect : 1.0f;
-} // setAspect
+}
 
-// The number of point particels
-- (void) setParticles:(uint32_t)particles
-{
-    if(!_haveVisualizer)
-    {
+// Количество партиклов
+- (void) setParticles:(uint32_t)particles {
+    if(!_haveVisualizer){
         mpProperties.particles = _particles = (particles) ? particles : NBody::Defaults::kParticles;
-    } // if
-} // setParticles
+    }
+}
 
-// Texture resolution.  The default is 64x64.
-- (void) setTexRes:(uint32_t)texRes
-{
-    if(!_haveVisualizer)
-    {
+// Разрешение текстуры - по-умолчанию 64x64.
+- (void) setTexRes:(uint32_t)texRes {
+    if(!_haveVisualizer){
         mpProperties.texRes = _texRes = (texRes > 64) ? texRes :  NBody::Defaults::kTexRes;
-    } // if
-} // setResolution
+    }
+}
 
-// Total number of frames to be rendered for a N-body simulation type
-- (void) setFrames:(uint32_t)frames
-{
+// Количество кадров, которое нужно отрендерить
+- (void) setFrames:(uint32_t)frames {
     _frames = (frames) ? frames : NBody::Defaults::kFrames;
-} // setFrames
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        // Get the N-body simulation properties from a property list file in app's resource
+- (BOOL) _acquire:(nullable id<MTLDevice>)device {
+    if(device){
+        // Создаем объект свойств
         mpProperties = [NBodyProperties new];
         
-        if(!mpProperties)
-        {
+        if(!mpProperties){
             NSLog(@">> ERROR: Failed to instantiate N-body properties object!");
-            
             return NO;
-        } // if
+        }
         
         mnCount = mpProperties.count;
         
-        if(!mnCount)
-        {
+        if(!mnCount){
             NSLog(@">> ERROR: Empty array for N-Body properties!");
-            
             return NO;
-        } // if
+        }
         
-        // Instantiate a new generator object for initial simualtion random data
+        // Создаем генерато для инициализации данных
         mpGenerator = [NBodyURDGenerator new];
         
-        if(!mpGenerator)
-        {
+        if(!mpGenerator){
             NSLog(@">> ERROR: Failed to instantiate uniform random distribution object!");
-            
             return NO;
-        } // if
+        }
         
-        // Instantiate a new render encoder object for N-body simaulation 
+        // Создаем рендер для нашего пространства
         mpPresenter = [MetalNBodyPresenter new];
         
-        if(!mpPresenter)
-        {
+        if(!mpPresenter){
             NSLog(@">> ERROR: Failed to instantiate Metal render encoder object!");
-            
             return NO;
-        } // if
+        }
                 
         mpPresenter.globals = mpProperties.globals;
         mpPresenter.device  = device;
         
-        if(!mpPresenter.haveEncoder)
-        {
+        // Проверяем наличие энкодера у рендера
+        if(!mpPresenter.haveEncoder){
             NSLog(@">> ERROR: Failed to acquire resources for the render encoder object!");
-            
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
+    }
     
     return NO;
-} // _acquire
+}
 
-- (void) _update
-{
+- (void) _update {
+    // Выбираем новую демку симуляции
     NSLog(@">> MESSAGE[N-Body]: Demo [%u] selected!", _active);
     
-    // Update the linear transformation matrices
+    // Обновляем матрицу линейной трансформации
     mpPresenter.update = YES;
     
-    // Select a new dictionary of key-value pairs for simulation properties
+    // Выставляем словарь настроек симуляции
     mpProperties.config = _active;
     
-    // Using the properties dictionary generate initial data for the simulation
+    // Генерируем начальные данные для симуляции
     mpGenerator.parameters = mpProperties.parameters;
     mpGenerator.colors     = mpPresenter.colors;
     mpGenerator.position   = mpPresenter.position;
     mpGenerator.velocity   = mpPresenter.velocity;
     mpGenerator.config     = _config;
-} // _update
+}
 
-// Generate all the resources necessary for N-body simulation
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveVisualizer)
-    {
+// Создание всех необходимых ресурсов для симуляции
+- (void) acquire:(nullable id<MTLDevice>)device {
+    if(!_haveVisualizer){
+        // Создаем визуализатор
         _haveVisualizer = [self _acquire:device];
         
-        if(_haveVisualizer)
-        {
+        // обновляем параметры визуализации
+        if(_haveVisualizer){
             [self _update];
-        } // if
-    } // if
-} // acquire
+        }
+    }
+}
 
-// Render a new frame
-- (void) _renderFrame:(nullable id<CAMetalDrawable>)drawable
-{
-    mpPresenter.aspect     = _aspect;                 // Update the aspect ratio
-    mpPresenter.parameters = mpProperties.parameters; // Update the simulation parameters
-    mpPresenter.drawable   = drawable;                // Set the new drawable and present
-} // _renderFrame
+// Рендерим новый кадр
+- (void) _renderFrame:(nullable id<CAMetalDrawable>)drawable{
+    mpPresenter.aspect     = _aspect;                 // Обновляем соотношение сторон
+    mpPresenter.parameters = mpProperties.parameters; // Обновляем параметры симуляции
+    mpPresenter.drawable   = drawable;                // Обновляем рисуемый объект и вызываем отрисовку
+}
 
-// Go to a new frame
-- (void) _nextFrame
-{
+// Переход на новый кадр
+- (void) _nextFrame {
     _frame++;
-    
+
+    // Как только достигаем максимума кадров данной симуляции - переходим к следующей симуляции
     _isComplete = (_frame % _frames) == 0;
-    
-    // If we reach the maximum number of frames switch to a new simulation type
-    if(_isComplete)
-    {
+    if(_isComplete){
+        // Завершаем работу
         [mpPresenter finish];
         
+        // Выбираем новую симуляцию
         _active = (_active + 1) % mnCount;
         
+        // обновляем настройки симуляции
         [self _update];
-    } // if
-} // _nextFrame
+    }
+}
 
-// Render a frame for N-body simaulation
-- (void) render:(nullable  id<CAMetalDrawable>)drawable
-{
-    if(drawable)
-    {
+// Рендеринг кадра симуляции
+- (void) render:(nullable id<CAMetalDrawable>)drawable {
+    if(drawable) {
         [self _renderFrame:drawable];
         [self _nextFrame];
-    } // if
-} // render
+    }
+}
 
 @end

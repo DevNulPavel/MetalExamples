@@ -13,10 +13,8 @@
 
 #ifdef __cplusplus
 
-namespace NBody
-{
-    namespace Defaults
-    {
+namespace NBody {
+    namespace Defaults {
         static const uint32_t kParticles = 1024 * 8;
         static const uint32_t kChannels  = 4;
         static const uint32_t kFrames    = 300;
@@ -31,24 +29,21 @@ namespace NBody
         static const float kTimestep     = 0.016f;
         static const float kZCenter      = 100.0f;
         
-        namespace Scale
-        {
+        namespace Scale {
             static const float kCluster  = 1.54f;
             static const float kVelocity = 8.0f;
-        } // Scale
+        }
         
-        namespace Configs
-        {
-            enum : uint8_t
-            {
+        namespace Configs{
+            enum: uint8_t {
                 eRandom = 0,
                 eShell,
                 eExpand,
                 eCount
             };
-        } // Configs
-    } // Defaults
-} // NBody
+        }
+    }
+}
 
 #endif
 
