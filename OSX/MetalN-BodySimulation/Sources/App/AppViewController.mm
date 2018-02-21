@@ -24,30 +24,6 @@
     NBodyVisualizer*  mpVisualizer;
 }
 
-- (void) _update:(nonnull MTKView *)view {
-    const CGRect bounds = view.bounds;
-    const float  aspect = float(std::abs(bounds.size.width / bounds.size.height));
-    
-    // Обновляем соотношение сторон у визуализатора
-    mpVisualizer.aspect = aspect;
-}
-
-- (void) mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
-    // Обновляем трансформы
-    [self _update:view];
-}
-
-- (void) drawInMTKView:(nonnull MTKView *)view {
-    if(view){
-        @autoreleasepool {
-            [self _update:view];
-            
-            // Вызываем отрисовку партиклов для симуляции тела из сеттера
-            [mpVisualizer render:view.currentDrawable];
-        }
-    }
-}
-
 - (void) didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];
 }
@@ -85,6 +61,30 @@
     // Настраиваем вьюшку
     mpView.device   = device;
     mpView.delegate = self;
+}
+
+- (void) update:(nonnull MTKView *)view {
+    const CGRect bounds = view.bounds;
+    const float  aspect = float(std::abs(bounds.size.width / bounds.size.height));
+    
+    // Обновляем соотношение сторон у визуализатора
+    mpVisualizer.aspect = aspect;
+}
+
+- (void) mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
+    // Обновляем трансформы
+    [self update:view];
+}
+
+- (void) drawInMTKView:(nonnull MTKView *)view {
+    if(view){
+        @autoreleasepool {
+            [self update:view];
+            
+            // Вызываем отрисовку партиклов для симуляции тела из сеттера
+            [mpVisualizer render:view.currentDrawable];
+        }
+    }
 }
 
 @end
