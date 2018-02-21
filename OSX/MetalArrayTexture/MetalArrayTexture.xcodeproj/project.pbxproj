@@ -287,7 +287,7 @@
 					};
 					AF871AFB1B97BF6C00005669 = {
 						CreatedOnToolsVersion = 6.4;
-						DevelopmentTeam = UJMSA9U58F;
+						DevelopmentTeam = 64AMT4Y49J;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -518,7 +518,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = UJMSA9U58F;
+				DEVELOPMENT_TEAM = 64AMT4Y49J;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					TARGET_IOS,
 					"$(inherited)",
@@ -528,8 +528,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
-				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+				PROVISIONING_PROFILE = "8ad9ba7b-0a97-4b32-a0ad-d80562843328";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile 17b";
 			};
 			name = Debug;
 		};
@@ -540,15 +540,15 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = UJMSA9U58F;
+				DEVELOPMENT_TEAM = 64AMT4Y49J;
 				GCC_PREPROCESSOR_DEFINITIONS = TARGET_IOS;
 				INFOPLIST_FILE = MetalArrayTexture/iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Apple.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
-				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+				PROVISIONING_PROFILE = "8ad9ba7b-0a97-4b32-a0ad-d80562843328";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile 17b";
 			};
 			name = Release;
 		};

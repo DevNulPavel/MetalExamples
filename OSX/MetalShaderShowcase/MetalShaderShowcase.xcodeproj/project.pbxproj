@@ -311,7 +311,7 @@
 				ORGANIZATIONNAME = "Apple Inc";
 				TargetAttributes = {
 					626C60B21932F12C007A3E00 = {
-						DevelopmentTeam = UJMSA9U58F;
+						DevelopmentTeam = 64AMT4Y49J;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -489,13 +489,13 @@
 				CLANG_MODULES_AUTOLINK = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = UJMSA9U58F;
+				DEVELOPMENT_TEAM = 64AMT4Y49J;
 				INFOPLIST_FILE = MetalShaderShowcase/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.MetalShaderShowcase";
 				PRODUCT_NAME = MetalShaderShowcase;
-				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
-				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+				PROVISIONING_PROFILE = "8ad9ba7b-0a97-4b32-a0ad-d80562843328";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile 17b";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -510,13 +510,13 @@
 				CLANG_MODULES_AUTOLINK = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = UJMSA9U58F;
+				DEVELOPMENT_TEAM = 64AMT4Y49J;
 				INFOPLIST_FILE = MetalShaderShowcase/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.MetalShaderShowcase";
 				PRODUCT_NAME = MetalShaderShowcase;
-				PROVISIONING_PROFILE = "ece03d3c-702b-49ee-a45f-8dc6cf3a7556";
-				PROVISIONING_PROFILE_SPECIFIER = "Common profile";
+				PROVISIONING_PROFILE = "8ad9ba7b-0a97-4b32-a0ad-d80562843328";
+				PROVISIONING_PROFILE_SPECIFIER = "Common profile 17b";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
