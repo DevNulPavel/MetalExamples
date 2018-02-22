@@ -16,8 +16,7 @@
 
 #import "MetalNBodyRenderStage.h"
 
-@implementation MetalNBodyRenderStage
-{
+@implementation MetalNBodyRenderStage {
 @private
     BOOL _isStaged;
     BOOL _isEncoded;
@@ -37,12 +36,10 @@
     MetalNBodyRenderPipeline*        mpPipeline;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self) {
         _isStaged  = NO;
         _isEncoded = NO;
         
@@ -58,214 +55,170 @@
         mpPipeline   = nil;
         mpFragment   = nil;
         mpVertex     = nil;
-    } // if
+    }
     
     return self;
-} // init
+}
 
-// N-body simulation global parameters
-- (void) setGlobals:(NSDictionary *)globals
-{
-    if(globals && !_isStaged)
-    {
+// Установка глобальных параметров
+- (void)setGlobals:(NSDictionary *)globals {
+    if(globals && !_isStaged) {
         _globals = globals;
         
         mnParticles = [_globals[kNBodyParticles] unsignedIntValue];
         
-        if(mpFragment)
-        {
+        if(mpFragment) {
             mpFragment.globals = globals;
-        } // if
-    } // if
-} // setParameters
+        }
+    }
+}
 
-// N-body parameters for simulation types
-- (void) setParameters:(NSDictionary *)parameters
-{
-    if(parameters)
-    {
+// Установка параметров конкретной симуляции
+- (void)setParameters:(NSDictionary*)parameters {
+    if(parameters){
         _parameters = parameters;
         
-        if(mpVertex)
-        {
+        if(mpVertex){
             mpVertex.pointSz = [parameters[kNBodyPointSize] floatValue];
-        } // if
-    } // if
-} // setParameters
+        }
+    }
+}
 
-// Aspect ratio
-- (void) setAspect:(float)aspect
-{
-    if(mpVertex)
-    {
+// Установка соотношения сторон
+- (void)setAspect:(float)aspect {
+    if(mpVertex){
         mpVertex.aspect = aspect;
-    } // if
-} // setAspect
+    }
+}
 
-// Orthographic projection configuration type
-- (void) setConfig:(uint32_t)config
-{
-    if(mpVertex)
-    {
+// Обновление конфига ортографической проекции
+- (void) setConfig:(uint32_t)config {
+    if(mpVertex){
         mpVertex.config = config;
-    } // if
-} // setConfig
+    }
+}
 
-// Update the linear transformation mvp matrix
-- (void) setUpdate:(BOOL)update
-{
-    if(mpVertex)
-    {
+// Выполнятие обновления
+- (void) setUpdate:(BOOL)update {
+    if(mpVertex){
         mpVertex.update = update;
-    } // if
-} // setUpdate
+    }
+}
 
-// Color host pointer
-- (nullable simd::float4 *) colors
-{
+// Получаем указатель на данные буффера цветов
+- (nullable simd::float4 *)getColorsPtr {
     simd::float4* pColors = nullptr;
-    
-    if(mpVertex)
-    {
+    if(mpVertex) {
         pColors = mpVertex.colors;
-    } // if
-    
+    }
     return pColors;
-} // colors
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        if(!_library)
-        {
+- (BOOL)acquire:(nullable id<MTLDevice>)device {
+    if(device){
+        if(!_library){
             NSLog(@">> ERROR: Failed to instantiate a new default m_Library!");
-            
             return NO;
-        } // if
+        }
         
         mpVertex = [MetalNBodyVertexStage new];
-        
-        if(!mpVertex)
-        {
+        if(!mpVertex){
             NSLog(@">> ERROR: Failed to instantiate a N-Body vertex stage object!");
-            
             return NO;
-        } // if
+        }
         
         mpVertex.particles = mnParticles;
         mpVertex.library   = _library;
         mpVertex.device    = device;
         
-        if(!mpVertex.isStaged)
-        {
+        if(!mpVertex.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body vertex stage resources!");
-            
             return NO;
-        } // if
+        }
         
         mpFragment = [MetalNBodyFragmentStage new];
-        
-        if(!mpFragment)
-        {
+        if(!mpFragment) {
             NSLog(@">> ERROR: Failed to instantiate a N-Body fragment stage object!");
-            
             return NO;
-        } // if
+        }
         
         mpFragment.globals = _globals;
         mpFragment.library = _library;
         mpFragment.device  = device;
        
-        if(!mpFragment.isStaged)
-        {
+        if(!mpFragment.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body fragment stage resources!");
-            
             return NO;
-        } // if
+        }
         
         mpPipeline = [MetalNBodyRenderPipeline new];
-        
-        if(!mpPipeline)
-        {
+        if(!mpPipeline){
             NSLog(@">> ERROR: Failed to instantiate a N-Body render pipeline object!");
-            
             return NO;
-        } // if
+        }
         
         mpPipeline.fragment = mpFragment.function;
         mpPipeline.vertex   = mpVertex.function;
-        mpPipeline.device   = device;
+        [mpPipeline buildForDevice:device];
         
-        if(!mpPipeline.haveDescriptor)
-        {
+        if(!mpPipeline.haveDescriptor){
             NSLog(@">> ERROR: Failed to acquire a N-Body render pipeline resources!");
-            
             return NO;
-        } // if
+        }
         
         mpDescriptor = [MetalNBodyRenderPassDescriptor new];
-        
-        if(!mpDescriptor)
-        {
+        if(!mpDescriptor){
             NSLog(@">> ERROR: Failed to instantiate a N-Body render pass descriptor object!");
-            
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // acquire
+}
 
-// Generate all the fragment, vertex and stages
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_isStaged)
-    {
-        _isStaged = [self _acquire:device];
-    } // if
-} // acquire
+// Инициализация для устройства
+- (void)setupForDevice:(nullable id<MTLDevice>)device {
+    if(!_isStaged){
+        _isStaged = [self acquire:device];
+    }
+}
 
-- (BOOL) _encode:(nullable id<CAMetalDrawable>)drawable
-{
-    if(!_cmdBuffer)
-    {
-        NSLog(@">> ERROR: Command buffer is nil!");
-        
-        return NO;
-    } // if
+// Выполняем рендеринг
+- (void)encode:(nullable id<CAMetalDrawable>)drawable{
+    _isEncoded = false;
     
-    if(!drawable)
-    {
+    if(!_cmdBuffer) {
+        _isEncoded = false;
+        NSLog(@">> ERROR: Command buffer is nil!");
+        return;
+    }
+    
+    if(!drawable){
+        _isEncoded = false;
         NSLog(@">> ERROR: Drawable is nil!");
-        
-        return NO;
-    } // if
+        return;
+    }
     
     mpDescriptor.drawable = drawable;
     
-    if(!mpDescriptor.haveTexture)
-    {
+    if(!mpDescriptor.haveTexture){
+        _isEncoded = false;
         NSLog(@">> ERROR: Failed to acquire a texture from a CA drawable!");
-        
-        return NO;
-    } // if
+        return;
+    }
     
     id<MTLRenderCommandEncoder> renderEncoder
     = [_cmdBuffer renderCommandEncoderWithDescriptor:mpDescriptor.descriptor];
     
-    if(!renderEncoder)
-    {
+    if(!renderEncoder){
+        _isEncoded = false;
         NSLog(@">> ERROR: Failed to acquire a render command encoder!");
-        
-        return NO;
-    } // if
+        return;
+    }
     
     [renderEncoder setRenderPipelineState:mpPipeline.render];
     
@@ -281,13 +234,7 @@
     
     [renderEncoder endEncoding];
     
-    return YES;
-} // _encode
-
-// Encode vertex and fragment stages
-- (void) encode:(nullable id<CAMetalDrawable>)drawable
-{
-    _isEncoded = [self _encode:drawable];
-} // encode
+    _isEncoded = true;
+}
 
 @end

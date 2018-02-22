@@ -64,14 +64,14 @@
     _activeParameters = parameters;
     
     if(_renderStage) {
-        _renderStage.parameters = _activeParameters;
+        [_renderStage setParameters:_activeParameters];
     }
 }
 
 // Установка соотношения сторон
 - (void)setAspect:(float)aspect {
     if(_renderStage){
-        _renderStage.aspect = aspect;
+        [_renderStage setAspect:aspect];
     }
 }
 
@@ -94,7 +94,7 @@
     simd::float4* pColors = nullptr;
     
     if(_renderStage) {
-        pColors = _renderStage.colors;
+        pColors = [_renderStage getColorsPtr];
     }
 
     return pColors;
@@ -165,9 +165,9 @@
         }
         
         // Обновляем параметры в стейдже рендеринга
-        _renderStage.globals = _globals;
-        _renderStage.library = _library;
-        _renderStage.device  = device;
+        [_renderStage setGlobals:_globals];
+        [_renderStage setLibrary:_library];
+        [_renderStage setupForDevice:device];
 
         // Инициализированная ли рендер стадия?
         if(!_renderStage.isStaged){
@@ -213,7 +213,7 @@
         // Обновляем данные для рендеринга, вызываем рендеринг
         _renderStage.positions = [_computeStage getActivePositionBuffer];
         _renderStage.cmdBuffer = _commandBuffer;
-        _renderStage.drawable  = drawable;
+        [_renderStage encode:drawable];
         
         // Отображаем и коммитим
         [_commandBuffer presentDrawable:drawable];

@@ -7,7 +7,7 @@
 		<key>NBody_Channels</key>
 		<integer>4</integer>
 		<key>NBody_Particles</key>
-		<integer>8096</integer>
+		<integer>8192</integer>
 		<key>NBody_Tex_Res</key>
 		<integer>64</integer>
 	</dict>
@@ -35,7 +35,7 @@
 			<key>NBody_PointSize</key>
 			<real>15</real>
 			<key>NBody_Softening</key>
-			<real>1</real>
+			<integer>1</integer>
 			<key>NBody_Timestep</key>
 			<real>0.0005999999999999999</real>
 			<key>NBody_Velocity_Scale</key>

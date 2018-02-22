@@ -8,125 +8,101 @@
 
 #import "MetalNBodyRenderPipeline.h"
 
-@implementation MetalNBodyRenderPipeline
-{
+@implementation MetalNBodyRenderPipeline {
 @private
     BOOL _blend;
     BOOL _haveDescriptor;
     
-    id<MTLFunction>  _vertex;
-    id<MTLFunction>  _fragment;
+    id<MTLFunction> _vertex;
+    id<MTLFunction> _fragment;
 
     id<MTLRenderPipelineState> _render;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self){
         _blend          = NO;
         _haveDescriptor = NO;
         
         _fragment = nil;
         _vertex   = nil;
         _render   = nil;
-    } // if
-    
-    return self;
-} // init
+    }
 
-- (BOOL) _acquire:(nullable id<MTLDevice>) device
-{
-    if(device)
-    {
-        if(!_vertex)
-        {
+    return self;
+}
+
+- (BOOL)acquire:(nullable id<MTLDevice>) device {
+    if(device){
+        if(!_vertex){
             NSLog(@">> ERROR: Vertex stage object is nil!");
-            
             return NO;
-        } // if
-        
-        if(!_fragment)
-        {
+        }
+        if(!_fragment){
             NSLog(@">> ERROR: Fragment stage object is nil!");
-            
             return NO;
-        } // if
+        }
         
         MTLRenderPipelineDescriptor* pDescriptor = [MTLRenderPipelineDescriptor new];
-        
-        if(!pDescriptor)
-        {
+        if(!pDescriptor){
             NSLog(@">> ERROR: Failed to instantiate render pipeline descriptor!");
-            
             return NO;
-        } // if
+        }
         
+        // Устанавливаем функции
         [pDescriptor setVertexFunction:_vertex];
         [pDescriptor setFragmentFunction:_fragment];
         
-        pDescriptor.colorAttachments[0].pixelFormat         = MTLPixelFormatBGRA8Unorm;
-        pDescriptor.colorAttachments[0].blendingEnabled     = YES;
-        pDescriptor.colorAttachments[0].rgbBlendOperation   = MTLBlendOperationAdd;
+        // Устанавливаем формат и включаем блендинг
+        pDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+        pDescriptor.colorAttachments[0].blendingEnabled = YES;
+        pDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
         pDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
         
-        if(_blend)
-        {
-            pDescriptor.colorAttachments[0].sourceRGBBlendFactor        = MTLBlendFactorOne;
-            pDescriptor.colorAttachments[0].sourceAlphaBlendFactor      = MTLBlendFactorOne;
+        if(_blend){
+            // Обычный блендинг
+            pDescriptor.colorAttachments[0].sourceRGBBlendFactor        = MTLBlendFactorSourceAlpha;
+            pDescriptor.colorAttachments[0].sourceAlphaBlendFactor      = MTLBlendFactorSourceAlpha;
             pDescriptor.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
             pDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-        } // if
-        else
-        {
+        } else{
+            // Аддитивный блендинг
             pDescriptor.colorAttachments[0].sourceRGBBlendFactor        = MTLBlendFactorSourceAlpha;
             pDescriptor.colorAttachments[0].sourceAlphaBlendFactor      = MTLBlendFactorSourceAlpha;
             pDescriptor.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOne;
             pDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOne;
-        } // else
+        } 
         
+        // Создаем пайплайн стейт
         NSError* pError = nil;
-        
         _render = [device newRenderPipelineStateWithDescriptor:pDescriptor
                                                          error:&pError];
-        
-        if(!_render)
-        {
+        if(!_render) {
             NSString* pDescription = [pError description];
-            
-            if(pDescription)
-            {
+            if(pDescription){
                 NSLog(@">> ERROR: Failed to instantiate render pipeline: {%@}", pDescription);
-            } // if
-            else
-            {
+            }else{
                 NSLog(@">> ERROR: Failed to instantiate render pipeline!");
-            } // else
-            
+            }
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // acquire
+}
 
-// Generate render pipeline state using a default system
-// device, fragment and vertex stages
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveDescriptor)
-    {
-        _haveDescriptor = [self _acquire:device];
-    } // if
-} // acquire
+// Создаем рендер-пайплайн для устройства
+- (void)buildForDevice:(nullable id<MTLDevice>)device {
+    if(!_haveDescriptor){
+        _haveDescriptor = [self acquire:device];
+    }
+}
 
 @end
 

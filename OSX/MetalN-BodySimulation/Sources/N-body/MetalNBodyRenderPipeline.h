@@ -9,24 +9,19 @@
 #import <Metal/Metal.h>
 
 @interface MetalNBodyRenderPipeline : NSObject
-
+// Вершинная функция
+@property (nullable) id<MTLFunction> vertex;
+// Фрагментная функция
+@property (nullable) id<MTLFunction> fragment;
+// Полученный пайплайн стейт
+@property (nullable, readonly) id<MTLRenderPipelineState> render;
+// Set blending
+@property BOOL blend;
 // Query to determine if render pipeline state is instantiated
 @property (readonly) BOOL haveDescriptor;
 
-// Vertex function
-@property (nullable) id<MTLFunction> vertex;
 
-// Fragment function
-@property (nullable) id<MTLFunction> fragment;
-
-// Generate render pipeline state using a default system
-// device, fragment and vertex stages
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
-
-// Render pipeline descriptor state
-@property (nullable, readonly) id<MTLRenderPipelineState> render;
-
-// Set blending
-@property BOOL blend;
+// Создаем рендер-пайплайн для устройства
+- (void)buildForDevice:(nullable id<MTLDevice>)device;
 
 @end

@@ -59,6 +59,8 @@ fragment half4 NBodyLightingFragment(FragColor        inColor      [[ stage_in  
     return fragColor * mix(x, y, a);
 } // NBodyLightingFragment
 
+
+
 //--------------------------------------
 //
 // Compute Kernel for n-body simulation
@@ -67,24 +69,26 @@ fragment half4 NBodyLightingFragment(FragColor        inColor      [[ stage_in  
 
 typedef NBody::Compute::Prefs NBodyPrefs;
 
-static float3 NBodyComputeForce(const float4 pos_1,
-                                const float4 pos_0,
-                                const float  softeningSqr)
-{
+static float3 NBodyComputeForce(const float4 pos_1, const float4 pos_0, const float  softeningSqr) {
+    // Вычисляем направление от старой позиции к новой
     float3 r = pos_1.xyz - pos_0.xyz;
     
+    // Вычисляем расстояние между точками
     float distSqr = distance_squared(pos_1.xyz, pos_0.xyz);
     
+    // Добавляем к расстоянию параметр
     distSqr += softeningSqr;
     
+    // Обратный корень от расстояния
     float invDist  = rsqrt(distSqr);
+    
+    // Куб обратного корня расстояния
     float invDist3 = invDist * invDist * invDist;
     
     float s = pos_1.w * invDist3;
     
     return r * s;
-} // NBodyComputeForce
-
+}
 
 // Вычислительный шейдер
 kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    // Выходные позиции
@@ -101,9 +105,7 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
 {
     ushort tile = 0;
     ushort k = localPosInGroup;
-    
-    ushort i, j;
-    
+
     // Общее количество партиклов
     const ushort particles = prefs.particles;
     
@@ -112,16 +114,15 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     // Предыдущая позиция в сетке
     float4 oldPos = pos_0[positionInAllGrid];
     
-    // Переменные для скорости и ускорения
-    float4 vel = 0.0f;
+    // Переменная для ускорения
     float3 acc = 0.0f;
     
     // Обходим все точки с шагом размером равным количеству потоков в тредгруппу
-    for(i = 0; i < particles; i += threadsCountOnGroup, ++tile){
+    for(ushort i = 0; i < particles; (i += threadsCountOnGroup, ++tile)){
         // TODO: ???
         pos_s[localPosInGroup] = pos_0[k];
         
-        j = 0;
+        ushort j = 0;
         while(j < threadsCountOnGroup) {
             acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
             acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
@@ -137,18 +138,18 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     }
     
     // Получаем старое ускорение данной точки
-    vel = vel_0[positionInAllGrid];
+    float4 oldVel = vel_0[positionInAllGrid];
     
     // Меняем скорость данной точки на основе рассчитанного ускорения
-    vel.xyz += acc * prefs.timestep;
+    oldVel.xyz += acc * prefs.timestep;
     
     // Умножаем скорость на затухание
-    vel.xyz *= prefs.damping;
+    oldVel.xyz *= prefs.damping;
     
     // Обновляем позицию точки на основе скорости движения
-    oldPos.xyz += vel.xyz * prefs.timestep;
+    oldPos.xyz += oldVel.xyz * prefs.timestep;
     
     // Записываем полученное значение позиции и скорости
     pos_1[positionInAllGrid] = oldPos;
-    vel_1[positionInAllGrid] = vel;
+    vel_1[positionInAllGrid] = oldVel;
 }

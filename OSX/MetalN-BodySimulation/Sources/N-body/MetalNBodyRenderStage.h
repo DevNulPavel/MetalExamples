@@ -13,23 +13,14 @@
 
 @interface MetalNBodyRenderStage : NSObject
 
-// Default library for creating vertexa nd fragment stages
+// Метал-библиотека
 @property (nullable) id<MTLLibrary> library;
 
-// Command buffer for render command encoder
+// Метал комманд буффер
 @property (nullable) id<MTLCommandBuffer> cmdBuffer;
 
-// Buffer for point particle positions
-@property (nullable) id<MTLBuffer>  positions;
-
-// Orthographic projection configuration type
-@property (nonatomic) uint32_t config;
-
-// N-body simulation global parameters
-@property (nullable, nonatomic) NSDictionary* globals;
-
-// N-body parameters for simulation types
-@property (nullable, nonatomic) NSDictionary* parameters;
+// Переменная метал-буффер позиций
+@property (nullable) id<MTLBuffer> positions;
 
 // Query to determine if all the resources are instantiated for the render stage object
 @property (readonly) BOOL isStaged;
@@ -37,21 +28,30 @@
 // Query to determine if all stages are encoded
 @property (readonly) BOOL isEncoded;
 
-// Color host pointer
-@property (nullable, nonatomic, readonly) simd::float4* colors;
 
-// Aspect ratio
-@property (nonatomic) float aspect;
 
-// Update the linear transformation mvp matrix
-@property (nonatomic) BOOL update;
+// Установка глобальных параметров
+-(void)setGlobals:(nonnull NSDictionary*)globals;
 
-// Generate all the fragment, vertex and stages
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
+// Установка параметров конкретной симуляции
+- (void)setParameters:(nonnull NSDictionary*)parameters;
 
-// Encode vertex and fragment stages
-@property (nullable, nonatomic, setter=encode:) id<CAMetalDrawable> drawable;
+// Установка соотношения сторон
+- (void)setAspect:(float)aspect;
 
-- (void)encode;
+// Обновление конфига ортографической проекции
+- (void)setConfig:(uint32_t)config;
+
+// Выполнятие обновления
+- (void)setUpdate:(BOOL)update;
+
+// Получаем указатель на данные буффера цветов
+- (nullable simd::float4*)getColorsPtr;
+
+// Инициализация для устройства
+- (void)setupForDevice:(nullable id<MTLDevice>)device;
+
+// Выполняем рендеринг
+- (void)encode:(nullable id<CAMetalDrawable>)drawable;
 
 @end

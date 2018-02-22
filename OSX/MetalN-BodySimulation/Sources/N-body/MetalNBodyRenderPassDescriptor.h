@@ -24,7 +24,10 @@
 @property (readonly) MTLLoadAction  load;
 @property (readonly) MTLStoreAction store;
 
-// Get or set the clear color for the render pass descriptor
-@property (nonatomic) MTLClearColor color;
+// Устанавливаем цвет очистки
+- (void)setClearColor:(MTLClearColor)color;
+
+// Обновляем отрисовку
+- (void)setDrawable:(nullable id<CAMetalDrawable>)drawable;
 
 @end
