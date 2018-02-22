@@ -16,8 +16,7 @@
 
 const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
 
-@implementation MetalNBodyComputeStage
-{
+@implementation MetalNBodyComputeStage {
 @private
     BOOL _isStaged;
     
@@ -27,8 +26,8 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     NSDictionary* _globals;
     NSDictionary* _parameters;
     
-    id<MTLFunction>             m_Function;
-    id<MTLComputePipelineState> m_Kernel;
+    id<MTLFunction>             _calculateFunction;
+    id<MTLComputePipelineState> _kernel;
     id<MTLBuffer>               m_Position[2];
     id<MTLBuffer>               m_Velocity[2];
     id<MTLBuffer>               m_Params;
@@ -50,12 +49,10 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     MTLSize m_WGCount;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self) {
         _name       = nil;
         _globals    = nil;
         _parameters = nil;
@@ -63,8 +60,8 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         _isStaged = NO;
         _multiplier  = 1;
         
-        m_Function = nil;
-        m_Kernel   = nil;
+        _calculateFunction = nil;
+        _kernel   = nil;
         m_Params   = nil;
         
         m_Position[0] = nil;
@@ -93,55 +90,46 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         mpHostVel[1] = nullptr;
         
         mpHostPrefs = nullptr;
-    } // if
+    }
     
     return self;
-} // init
+}
 
-// Position buffer
-- (nullable id<MTLBuffer>) buffer
-{
+// Получаем текущий активный буффер с позициями
+- (nullable id<MTLBuffer>) getActivePositionBuffer {
     return m_Position[mnRead];
-} // buffer
+}
 
-// Position host pointer
-- (nullable simd::float4 *) position
-{
+// Указатель на данные с позициями
+- (nullable simd::float4 *) getPositionData{
     return mpHostPos[mnRead];
-} // position
+}
 
-// Velocity host pointer
-- (nullable simd::float4 *) velocity
-{
+// Указатель на данные с ускорениями
+- (nullable simd::float4 *) getVelocityData {
     return mpHostVel[mnRead];
-} // velocity
+}
 
-- (void) setMultiplier:(uint32_t)multiplier
-{
-    if(!_isStaged)
-    {
+- (void)setMultiplier:(uint32_t)multiplier {
+    if(!_isStaged) {
         _multiplier = (multiplier) ? multiplier : 1;
-    } // if
-} // setMultiplier
+    }
+}
 
-// N-body simulation global parameters
-- (void) setGlobals:(NSDictionary *)globals
-{
-    if(globals && !_isStaged)
-    {
+// Установка глобальных параметров
+- (void)setGlobals:(NSDictionary *)globals {
+    if(globals && !_isStaged){
         _globals = globals;
         
         m_HostPrefs.particles = [_globals[kNBodyParticles] unsignedIntValue];
         
         mnSize[0] = mnStride * m_HostPrefs.particles;
-    } // if
-} // setGlobals
+    }
+}
 
-// N-body parameters for simulation types
-- (void) setParameters:(NSDictionary *)parameters
-{
-    if(parameters)
-    {
+// Установка параметров конкретной симуляции
+- (void)setActiveParameters:(NSDictionary *)parameters{
+    if(parameters){
         _parameters = parameters;
         
         const float nSoftening = [_parameters[kNBodySoftening] floatValue];
@@ -151,58 +139,45 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         m_HostPrefs.softeningSqr = nSoftening * nSoftening;
         
         *mpHostPrefs = m_HostPrefs;
-    } // if
-} // seParameters
+    }
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        if(!_library)
-        {
+- (BOOL)acquire:(nullable id<MTLDevice>)device {
+    if(device){
+        if(!_library){
             NSLog(@">> ERROR: Metal library is nil!");
-            
             return NO;
-        } // if
+        }
         
-        m_Function = [_library newFunctionWithName:(_name) ? _name : @"NBodyIntegrateSystem"];
-        
-        if(!m_Function)
-        {
+        // Получаем вычислительную функцию из шейдеров
+        _calculateFunction = [_library newFunctionWithName:(_name) ? _name : @"NBodyIntegrateSystem"];
+        if(!_calculateFunction){
             NSLog(@">> ERROR: Failed to instantiate function!");
-            
             return NO;
-        } // if
+        }
         
+        // Получаем вычислительное ядро
         NSError* pError = nil;
-        
-        m_Kernel = [device newComputePipelineStateWithFunction:m_Function
+        _kernel = [device newComputePipelineStateWithFunction:_calculateFunction
                                                          error:&pError];
-        
-        if(!m_Kernel)
-        {
+        if(!_kernel){
             NSString* pDescription = [pError description];
             
-            if(pDescription)
-            {
+            if(pDescription){
                 NSLog(@">> ERROR: Failed to instantiate kernel: {%@}!", pDescription);
-            } // if
-            else
-            {
+            }else{
                 NSLog(@">> ERROR: Failed to instantiate kernel!");
-            } // else
+            }
             
             return NO;
-        } // if
+        }
         
-        mnThreadDimX = _multiplier * m_Kernel.threadExecutionWidth;
+        mnThreadDimX = _multiplier * _kernel.threadExecutionWidth;
         
-        if((m_HostPrefs.particles % mnThreadDimX) != 0)
-        {
+        if((m_HostPrefs.particles % mnThreadDimX) != 0) {
             NSLog(@">> ERROR: The number of bodies needs to be a multiple of the workgroup size!");
-            
             return NO;
-        } // if
+        }
         
         mnSize[2] = kNBodyFloat4Size * mnThreadDimX;
         
@@ -210,76 +185,52 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         m_WGSize  = MTLSizeMake(mnThreadDimX, 1, 1);
         
         m_Position[mnRead] = [device newBufferWithLength:mnSize[0] options:0];
-        
-        if(!m_Position[mnRead])
-        {
+        if(!m_Position[mnRead]){
             NSLog(@">> ERROR: Failed to instantiate position buffer 1!");
-            
             return NO;
-        } // if
+        }
         
         mpHostPos[mnRead] = static_cast<simd::float4 *>([m_Position[mnRead] contents]);
-        
-        if(!mpHostPos[mnRead])
-        {
+        if(!mpHostPos[mnRead]){
             NSLog(@">> ERROR: Failed to get the base address to position buffer 1!");
-            
             return NO;
-        } // if
+        }
         
         m_Position[mnWrite] = [device newBufferWithLength:mnSize[0] options:0];
-        
-        if(!m_Position[mnWrite])
-        {
+        if(!m_Position[mnWrite]){
             NSLog(@">> ERROR: Failed to instantiate position buffer 2!");
-            
             return NO;
-        } // if
+        }
         
         mpHostPos[mnWrite] = static_cast<simd::float4 *>([m_Position[mnWrite] contents]);
-        
-        if(!mpHostPos[mnWrite])
-        {
+        if(!mpHostPos[mnWrite]){
             NSLog(@">> ERROR: Failed to get the base address to position buffer 2!");
-            
             return NO;
-        } // if
+        }
         
         m_Velocity[mnRead] = [device newBufferWithLength:mnSize[0] options:0];
-        
-        if(!m_Velocity[mnRead])
-        {
+        if(!m_Velocity[mnRead]){
             NSLog(@">> ERROR: Failed to instantiate velocity buffer 1!");
-            
             return NO;
-        } // if
+        }
         
         mpHostVel[mnRead] = static_cast<simd::float4 *>([m_Velocity[mnRead] contents]);
-        
-        if(!mpHostVel[mnRead])
-        {
+        if(!mpHostVel[mnRead]){
             NSLog(@">> ERROR: Failed to get the base address to velocity buffer 1!");
-            
             return NO;
-        } // if
+        }
         
         m_Velocity[mnWrite] = [device newBufferWithLength:mnSize[0] options:0];
-        
-        if(!m_Velocity[mnWrite])
-        {
+        if(!m_Velocity[mnWrite]){
             NSLog(@">> ERROR: Failed to instantiate velocity buffer 2!");
-            
             return NO;
-        } // if
+        }
         
         mpHostVel[mnWrite] = static_cast<simd::float4 *>([m_Velocity[mnWrite] contents]);
-        
-        if(!mpHostVel[mnWrite])
-        {
+        if(!mpHostVel[mnWrite]){
             NSLog(@">> ERROR: Failed to get the base address to velocity buffer 2!");
-            
             return NO;
-        } // if
+        }
         
         m_Params = [device newBufferWithLength:mnSize[1] options:0];
         
@@ -309,14 +260,12 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     return NO;
 } // _acquire
 
-// Generate all the necessary compute stage resources using a default system device
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_isStaged)
-    {
-        _isStaged = [self _acquire:device];
-    } // if
-} // acquire
+// Настройка и генерация необходимых ресурсов для девайса
+- (void)setupForDevice:(nullable id<MTLDevice>)device {
+    if(!_isStaged){
+        _isStaged = [self acquire:device];
+    }
+}
 
 // Setup compute pipeline state and encode
 - (void) encode:(nullable id<MTLCommandBuffer>)cmdBuffer
@@ -327,7 +276,7 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         
         if(encoder)
         {
-            [encoder setComputePipelineState:m_Kernel];
+            [encoder setComputePipelineState:_kernel];
             
             [encoder setBuffer:m_Position[mnWrite]  offset:0 atIndex:0];
             [encoder setBuffer:m_Velocity[mnWrite]  offset:0 atIndex:1];

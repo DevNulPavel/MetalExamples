@@ -105,7 +105,7 @@
     simd::float4* pPosition = nullptr;
     
     if(_computeStage){
-        pPosition = _computeStage.position;
+        pPosition = [_computeStage getPositionData];
     }
     
     return pPosition;
@@ -116,7 +116,7 @@
     simd::float4* pVelocity = nullptr;
     
     if(_computeStage){
-        pVelocity = _computeStage.velocity;
+        pVelocity = [_computeStage getVelocityData];
     }
     
     return pVelocity;
@@ -147,9 +147,9 @@
         }
         
         // Обновляем параметры в вычислительном стейдже
-        _computeStage.globals = _globals;
-        _computeStage.library = _library;
-        _computeStage.device  = device;
+        [_computeStage setGlobals:_globals];
+        [_computeStage setLibrary:_library];
+        [_computeStage setupForDevice:device];
         
         // Инициализированная ли вычислительная стадия?
         if(!_computeStage.isStaged){
@@ -204,14 +204,14 @@
     }
     
     // Обновляем параметры вычислительной стадии и выполняем задачи по вычислению на GPU
-    _computeStage.parameters = _activeParameters;
+    [_computeStage setActiveParameters:_activeParameters];
     _computeStage.cmdBuffer  = _commandBuffer;
     
     // TODO: Надо получать drawable как можно ближе к present, чтобы не было ворнинга
     id<CAMetalDrawable> drawable = drawableBlock();
     if(drawable){
         // Обновляем данные для рендеринга, вызываем рендеринг
-        _renderStage.positions = _computeStage.buffer;
+        _renderStage.positions = [_computeStage getActivePositionBuffer];
         _renderStage.cmdBuffer = _commandBuffer;
         _renderStage.drawable  = drawable;
         

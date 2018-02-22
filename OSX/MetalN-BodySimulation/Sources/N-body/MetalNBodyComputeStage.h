@@ -20,29 +20,32 @@
 // Metal library to use for instantiating a compute stage
 @property (nullable) id<MTLLibrary> library;
 
-// N-body simulation global parameters
-@property (nullable, nonatomic) NSDictionary* globals;
-
-// N-body parameters for simulation types
-@property (nullable, nonatomic) NSDictionary* parameters;
-
-// Position buffer
-@property (nullable, readonly) id<MTLBuffer> buffer;
-
-// Host pointers
-@property (nullable, readonly) simd::float4* position;
-@property (nullable, readonly) simd::float4* velocity;
-
-// Thread execution width multiplier
-@property (nonatomic) uint32_t multiplier;
-
-// Generate all the necessary compute stage resources using a default system device
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
-
 // Setup compute pipeline state and encode
 @property (nullable, nonatomic, setter=encode:) id<MTLCommandBuffer> cmdBuffer;
 
+
+// Настройка и генерация необходимых ресурсов для девайса
+- (void)setupForDevice:(nullable id<MTLDevice>)device;
+
 // Swap the read and write buffers
 - (void) swapBuffers;
+
+// Получаем текущий активный буффер с позициями
+- (nullable id<MTLBuffer>)getActivePositionBuffer;
+
+// Указатель на данные с позициями
+- (nullable simd::float4 *)getPositionData;
+
+// Указатель на данные с ускорениями
+- (nullable simd::float4 *) getVelocityData;
+
+// Множитель
+- (void)setMultiplier:(uint32_t)multiplier;
+
+// Установка глобальных параметров
+- (void)setGlobals:(nonnull NSDictionary *)globals;
+
+// Установка параметров конкретной симуляции
+- (void)setActiveParameters:(nonnull NSDictionary *)parameters;
 
 @end

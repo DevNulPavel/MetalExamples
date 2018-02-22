@@ -13,7 +13,7 @@
 
 @interface MetalNBodyPresenter : NSObject
 
-// Query to determine if all the resources are instantiated for render encoder object
+// Есть ли у нас энкодер???
 @property (readonly) BOOL haveEncoder;
 
 // Проверяем, завершены ли все стадии
@@ -48,7 +48,7 @@
 - (nullable simd::float4 *) getVelocityPointer;
 
 // Выполняем энкодинг для drawable объекта
-- (void) encodeForDrawable:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock;
+- (void) encodeForDrawable:(nonnull id<CAMetalDrawable>(^)(void))drawableBlock;
 
 // Ждем пока рендер-энкодер завершит свою работу
 - (void)finish;
