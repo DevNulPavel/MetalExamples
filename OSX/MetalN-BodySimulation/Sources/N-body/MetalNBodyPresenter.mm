@@ -205,7 +205,7 @@
     
     // Обновляем параметры вычислительной стадии и выполняем задачи по вычислению на GPU
     [_computeStage setActiveParameters:_activeParameters];
-    _computeStage.cmdBuffer  = _commandBuffer;
+    [_computeStage encode:_commandBuffer];
     
     // TODO: Надо получать drawable как можно ближе к present, чтобы не было ворнинга
     id<CAMetalDrawable> drawable = drawableBlock();

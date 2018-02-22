@@ -20,15 +20,9 @@
 // Metal library to use for instantiating a compute stage
 @property (nullable) id<MTLLibrary> library;
 
-// Setup compute pipeline state and encode
-@property (nullable, nonatomic, setter=encode:) id<MTLCommandBuffer> cmdBuffer;
-
 
 // Настройка и генерация необходимых ресурсов для девайса
 - (void)setupForDevice:(nullable id<MTLDevice>)device;
-
-// Swap the read and write buffers
-- (void) swapBuffers;
 
 // Получаем текущий активный буффер с позициями
 - (nullable id<MTLBuffer>)getActivePositionBuffer;
@@ -47,5 +41,12 @@
 
 // Установка параметров конкретной симуляции
 - (void)setActiveParameters:(nonnull NSDictionary *)parameters;
+
+// Выполняем вычисления на GPU
+- (void)encode:(nullable id<MTLCommandBuffer>)cmdBuffer;
+
+// Меняем местами индексы входных и выходных буфферов
+- (void)swapBuffers;
+
 
 @end

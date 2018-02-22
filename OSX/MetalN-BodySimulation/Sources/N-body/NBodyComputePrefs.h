@@ -14,10 +14,9 @@
 namespace NBody{
     namespace Compute{
         struct Prefs{
-            float  timestep;
-            float  damping;
-            float  softeningSqr;
-            
+            float timestep;
+            float damping;
+            float softeningSqr;
             unsigned int particles;
         };
         

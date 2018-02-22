@@ -22,31 +22,34 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     
     uint32_t _multiplier;
     
-    NSString*     _name;
+    NSString* _name;
     NSDictionary* _globals;
     NSDictionary* _parameters;
     
-    id<MTLFunction>             _calculateFunction;
-    id<MTLComputePipelineState> _kernel;
-    id<MTLBuffer>               m_Position[2];
-    id<MTLBuffer>               m_Velocity[2];
-    id<MTLBuffer>               m_Params;
+    id<MTLFunction> _calculateFunction;
+    id<MTLComputePipelineState> _computePipelineState;
+    id<MTLBuffer> _positionsBuffers[2];
+    id<MTLBuffer> _velocityBuffers[2];
+    id<MTLBuffer> _paramsBuffer;
     
-    uint32_t mnStride;
-    uint32_t mnRead;
-    uint32_t mnWrite;
+    uint32_t _dataStride;
+    uint32_t _readBufferIndex;
+    uint32_t _writeBufferIndex;
     
-    uint64_t mnSize[3];
-    uint64_t mnThreadDimX;
+    uint64_t _buffersDataSize;
+    uint64_t _preferencesDataSize;
+    uint64_t _threadgroupMemorySize;
     
-    simd::float4* mpHostPos[2];
-    simd::float4* mpHostVel[2];
+    uint64_t _threadsDimentionX;
     
-    NBody::Compute::Prefs  m_HostPrefs;
-    NBody::Compute::Prefs* mpHostPrefs;
+    simd::float4* _positionsDataPtr[2];
+    simd::float4* _velocityDataPtr[2];
     
-    MTLSize m_WGSize;
-    MTLSize m_WGCount;
+    NBody::Compute::Prefs _preferences;
+    NBody::Compute::Prefs* _paramsDataPtr;
+    
+    MTLSize _threadsCountInGroup;
+    MTLSize _threadGroupsCount;
 }
 
 - (instancetype) init {
@@ -61,35 +64,36 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         _multiplier  = 1;
         
         _calculateFunction = nil;
-        _kernel   = nil;
-        m_Params   = nil;
+        _computePipelineState   = nil;
         
-        m_Position[0] = nil;
-        m_Position[1] = nil;
+        _positionsBuffers[0] = nil;
+        _positionsBuffers[1] = nil;
         
-        m_Velocity[0] = nil;
-        m_Velocity[1] = nil;
+        _velocityBuffers[0] = nil;
+        _velocityBuffers[1] = nil;
         
-        m_HostPrefs.particles    = NBody::Defaults::kParticles;
-        m_HostPrefs.timestep     = NBody::Defaults::kTimestep;
-        m_HostPrefs.damping      = NBody::Defaults::kDamping;
-        m_HostPrefs.softeningSqr = NBody::Defaults::kSofteningSqr;
+        _paramsBuffer = nil;
         
-        mnSize[0] = mnStride * m_HostPrefs.particles;
-        mnSize[1] = sizeof(NBody::Compute::Prefs);
-        mnSize[2] = 0;
+        _preferences.particles    = NBody::Defaults::kParticles;
+        _preferences.timestep     = NBody::Defaults::kTimestep;
+        _preferences.damping      = NBody::Defaults::kDamping;
+        _preferences.softeningSqr = NBody::Defaults::kSofteningSqr;
         
-        mnStride = kNBodyFloat4Size;
-        mnRead   = 0;
-        mnWrite  = 1;
+        _buffersDataSize = _dataStride * _preferences.particles; // Размер буффера данных
+        _preferencesDataSize = sizeof(NBody::Compute::Prefs);    // Размер буффера настроек
+        _threadgroupMemorySize = 0;                              // Размер буфферных данных на отдельную тредгруппу
         
-        mpHostPos[0] = nullptr;
-        mpHostPos[1] = nullptr;
+        _dataStride = kNBodyFloat4Size;
+        _readBufferIndex = 0;
+        _writeBufferIndex = 1;
         
-        mpHostVel[0] = nullptr;
-        mpHostVel[1] = nullptr;
+        _positionsDataPtr[0] = nullptr;
+        _positionsDataPtr[1] = nullptr;
         
-        mpHostPrefs = nullptr;
+        _velocityDataPtr[0] = nullptr;
+        _velocityDataPtr[1] = nullptr;
+        
+        _paramsDataPtr = nullptr;
     }
     
     return self;
@@ -97,17 +101,17 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
 
 // Получаем текущий активный буффер с позициями
 - (nullable id<MTLBuffer>) getActivePositionBuffer {
-    return m_Position[mnRead];
+    return _positionsBuffers[_readBufferIndex];
 }
 
 // Указатель на данные с позициями
 - (nullable simd::float4 *) getPositionData{
-    return mpHostPos[mnRead];
+    return _positionsDataPtr[_readBufferIndex];
 }
 
 // Указатель на данные с ускорениями
 - (nullable simd::float4 *) getVelocityData {
-    return mpHostVel[mnRead];
+    return _velocityDataPtr[_readBufferIndex];
 }
 
 - (void)setMultiplier:(uint32_t)multiplier {
@@ -121,9 +125,9 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     if(globals && !_isStaged){
         _globals = globals;
         
-        m_HostPrefs.particles = [_globals[kNBodyParticles] unsignedIntValue];
+        _preferences.particles = [_globals[kNBodyParticles] unsignedIntValue];
         
-        mnSize[0] = mnStride * m_HostPrefs.particles;
+        _buffersDataSize = _dataStride * _preferences.particles;
     }
 }
 
@@ -134,11 +138,11 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         
         const float nSoftening = [_parameters[kNBodySoftening] floatValue];
         
-        m_HostPrefs.timestep     = [_parameters[kNBodyTimestep]  floatValue];
-        m_HostPrefs.damping      = [_parameters[kNBodyDamping]   floatValue];
-        m_HostPrefs.softeningSqr = nSoftening * nSoftening;
+        _preferences.timestep     = [_parameters[kNBodyTimestep]  floatValue];
+        _preferences.damping      = [_parameters[kNBodyDamping]   floatValue];
+        _preferences.softeningSqr = nSoftening * nSoftening;
         
-        *mpHostPrefs = m_HostPrefs;
+        *_paramsDataPtr = _preferences;
     }
 }
 
@@ -156,109 +160,113 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
             return NO;
         }
         
-        // Получаем вычислительное ядро
+        // создаем вычислительное состояние для энкодера
         NSError* pError = nil;
-        _kernel = [device newComputePipelineStateWithFunction:_calculateFunction
-                                                         error:&pError];
-        if(!_kernel){
+        _computePipelineState = [device newComputePipelineStateWithFunction:_calculateFunction error:&pError];
+        if(!_computePipelineState){
             NSString* pDescription = [pError description];
-            
             if(pDescription){
                 NSLog(@">> ERROR: Failed to instantiate kernel: {%@}!", pDescription);
             }else{
                 NSLog(@">> ERROR: Failed to instantiate kernel!");
             }
-            
             return NO;
         }
         
-        mnThreadDimX = _multiplier * _kernel.threadExecutionWidth;
+        // Получаем количество потоков на группу
+        // threadExecutionWidth - это количество потоков, которое дается на выполнение отдельной функции за один вызов
+        _threadsDimentionX = _multiplier * _computePipelineState.threadExecutionWidth;
         
-        if((m_HostPrefs.particles % mnThreadDimX) != 0) {
+        if((_preferences.particles % _threadsDimentionX) != 0) {
             NSLog(@">> ERROR: The number of bodies needs to be a multiple of the workgroup size!");
             return NO;
         }
         
-        mnSize[2] = kNBodyFloat4Size * mnThreadDimX;
+        // Размер буфферных данных на отдельную тредгруппу
+        _threadgroupMemorySize = kNBodyFloat4Size * _threadsDimentionX;
         
-        m_WGCount = MTLSizeMake(m_HostPrefs.particles/mnThreadDimX, 1, 1);
-        m_WGSize  = MTLSizeMake(mnThreadDimX, 1, 1);
+        // Вычисляем необходимое количество групп потоков
+        _threadGroupsCount = MTLSizeMake(_preferences.particles/_threadsDimentionX, 1, 1);
+        // Количество потоков в отдельной группе потоков
+        _threadsCountInGroup  = MTLSizeMake(_threadsDimentionX, 1, 1);
         
-        m_Position[mnRead] = [device newBufferWithLength:mnSize[0] options:0];
-        if(!m_Position[mnRead]){
+        // Создаем входной Метал буффер для позиций
+        _positionsBuffers[_readBufferIndex] = [device newBufferWithLength:_buffersDataSize options:0];
+        if(!_positionsBuffers[_readBufferIndex]){
             NSLog(@">> ERROR: Failed to instantiate position buffer 1!");
             return NO;
         }
         
-        mpHostPos[mnRead] = static_cast<simd::float4 *>([m_Position[mnRead] contents]);
-        if(!mpHostPos[mnRead]){
+        // Получаем указатель на входные данные позиций
+        _positionsDataPtr[_readBufferIndex] = static_cast<simd::float4*>([_positionsBuffers[_readBufferIndex] contents]);
+        if(!_positionsDataPtr[_readBufferIndex]){
             NSLog(@">> ERROR: Failed to get the base address to position buffer 1!");
             return NO;
         }
         
-        m_Position[mnWrite] = [device newBufferWithLength:mnSize[0] options:0];
-        if(!m_Position[mnWrite]){
+        // Создаем выходной Метал буффер данных для позиций
+        _positionsBuffers[_writeBufferIndex] = [device newBufferWithLength:_buffersDataSize options:0];
+        if(!_positionsBuffers[_writeBufferIndex]){
             NSLog(@">> ERROR: Failed to instantiate position buffer 2!");
             return NO;
         }
         
-        mpHostPos[mnWrite] = static_cast<simd::float4 *>([m_Position[mnWrite] contents]);
-        if(!mpHostPos[mnWrite]){
+        // Получаем указатель на выходные данные позиций
+        _positionsDataPtr[_writeBufferIndex] = static_cast<simd::float4 *>([_positionsBuffers[_writeBufferIndex] contents]);
+        if(!_positionsDataPtr[_writeBufferIndex]){
             NSLog(@">> ERROR: Failed to get the base address to position buffer 2!");
             return NO;
         }
         
-        m_Velocity[mnRead] = [device newBufferWithLength:mnSize[0] options:0];
-        if(!m_Velocity[mnRead]){
+        // Создаем входной Метал буффер для направления движений
+        _velocityBuffers[_readBufferIndex] = [device newBufferWithLength:_buffersDataSize options:0];
+        if(!_velocityBuffers[_readBufferIndex]){
             NSLog(@">> ERROR: Failed to instantiate velocity buffer 1!");
             return NO;
         }
         
-        mpHostVel[mnRead] = static_cast<simd::float4 *>([m_Velocity[mnRead] contents]);
-        if(!mpHostVel[mnRead]){
+        // Получаем указатель на входные данные направления движений
+        _velocityDataPtr[_readBufferIndex] = static_cast<simd::float4 *>([_velocityBuffers[_readBufferIndex] contents]);
+        if(!_velocityDataPtr[_readBufferIndex]){
             NSLog(@">> ERROR: Failed to get the base address to velocity buffer 1!");
             return NO;
         }
         
-        m_Velocity[mnWrite] = [device newBufferWithLength:mnSize[0] options:0];
-        if(!m_Velocity[mnWrite]){
+        // Создаем выходной Метал буффер для направления движений
+        _velocityBuffers[_writeBufferIndex] = [device newBufferWithLength:_buffersDataSize options:0];
+        if(!_velocityBuffers[_writeBufferIndex]){
             NSLog(@">> ERROR: Failed to instantiate velocity buffer 2!");
             return NO;
         }
         
-        mpHostVel[mnWrite] = static_cast<simd::float4 *>([m_Velocity[mnWrite] contents]);
-        if(!mpHostVel[mnWrite]){
+        // Получаем указатель на выходные данные направления движений
+        _velocityDataPtr[_writeBufferIndex] = static_cast<simd::float4 *>([_velocityBuffers[_writeBufferIndex] contents]);
+        if(!_velocityDataPtr[_writeBufferIndex]){
             NSLog(@">> ERROR: Failed to get the base address to velocity buffer 2!");
             return NO;
         }
         
-        m_Params = [device newBufferWithLength:mnSize[1] options:0];
-        
-        if(!m_Params)
-        {
+        // Создаем Метал буффер для параметров
+        _paramsBuffer = [device newBufferWithLength:_preferencesDataSize options:0];
+        if(!_paramsBuffer){
             NSLog(@">> ERROR: Failed to instantiate compute kernel parameter buffer!");
-            
             return NO;
-        } // if
+        }
         
-        mpHostPrefs = static_cast<NBody::Compute::Prefs *>([m_Params contents]);
-        
-        if(!mpHostPrefs)
-        {
+        // Указатель на данные параметров
+        _paramsDataPtr = static_cast<NBody::Compute::Prefs*>([_paramsBuffer contents]);
+        if(!_paramsDataPtr){
             NSLog(@">> ERROR: Failed to get the base address to compute kernel parameter buffer!");
-            
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
-    else
-    {
+    } else {
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // _acquire
+}
 
 // Настройка и генерация необходимых ресурсов для девайса
 - (void)setupForDevice:(nullable id<MTLDevice>)device {
@@ -267,38 +275,40 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
     }
 }
 
-// Setup compute pipeline state and encode
-- (void) encode:(nullable id<MTLCommandBuffer>)cmdBuffer
-{
-    if(cmdBuffer)
-    {
+// Выполняем вычисления на GPU
+- (void)encode:(nullable id<MTLCommandBuffer>)cmdBuffer {
+    if(cmdBuffer) {
         id<MTLComputeCommandEncoder> encoder = [cmdBuffer computeCommandEncoder];
         
-        if(encoder)
-        {
-            [encoder setComputePipelineState:_kernel];
+        if(encoder) {
+            // Выставляем вычислительный стейт
+            [encoder setComputePipelineState:_computePipelineState];
             
-            [encoder setBuffer:m_Position[mnWrite]  offset:0 atIndex:0];
-            [encoder setBuffer:m_Velocity[mnWrite]  offset:0 atIndex:1];
-            [encoder setBuffer:m_Position[mnRead]   offset:0 atIndex:2];
-            [encoder setBuffer:m_Velocity[mnRead]   offset:0 atIndex:3];
+            // Выставляем выходные буфферы
+            [encoder setBuffer:_positionsBuffers[_writeBufferIndex] offset:0 atIndex:0];
+            [encoder setBuffer:_velocityBuffers[_writeBufferIndex] offset:0 atIndex:1];
             
-            [encoder setBuffer:m_Params offset:0 atIndex:4];
+            // Выставляем входные буфферы
+            [encoder setBuffer:_positionsBuffers[_readBufferIndex] offset:0 atIndex:2];
+            [encoder setBuffer:_velocityBuffers[_readBufferIndex] offset:0 atIndex:3];
             
-            [encoder setThreadgroupMemoryLength:mnSize[2] atIndex:0];
+            // Выставляем буффер с параметрами
+            [encoder setBuffer:_paramsBuffer offset:0 atIndex:4];
             
-            [encoder dispatchThreadgroups:m_WGCount
-                    threadsPerThreadgroup:m_WGSize];
+            // Размер буфферных данных на отдельную тредгруппу
+            [encoder setThreadgroupMemoryLength:_threadgroupMemorySize atIndex:0];
+            
+            // Ставим вычисления в очередь
+            [encoder dispatchThreadgroups:_threadGroupsCount threadsPerThreadgroup:_threadsCountInGroup];
             
             [encoder endEncoding];
-        } // if
-    } // if
-} // encode
+        }
+    }
+}
 
-// Swap the read/write buffers
-- (void) swapBuffers
-{
-    CM::swap(mnRead, mnWrite);
-} // swapBuffers
+// Меняем местами индексы входных и выходных буфферов
+- (void) swapBuffers {
+    CM::swap(_readBufferIndex, _writeBufferIndex);
+}
 
 @end

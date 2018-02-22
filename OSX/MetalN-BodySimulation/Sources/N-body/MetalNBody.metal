@@ -85,55 +85,70 @@ static float3 NBodyComputeForce(const float4 pos_1,
     return r * s;
 } // NBodyComputeForce
 
-kernel void NBodyIntegrateSystem(device float4* const   pos_1 [[ buffer(0)                      ]],   // new position
-                                 device float4* const   vel_1 [[ buffer(1)                      ]],   // new velocity
-                                 constant float4* const pos_0 [[ buffer(2)                      ]],   // old position
-                                 constant float4* const vel_0 [[ buffer(3)                      ]],   // old velocity
-                                 constant NBodyPrefs&   prefs [[ buffer(4)                      ]],
-                                 threadgroup float4*    pos_s [[ threadgroup(0)                 ]],   // shared position
-                                 const ushort           gid   [[ thread_position_in_grid        ]],
-                                 const ushort           lid   [[ thread_position_in_threadgroup ]],
-                                 const ushort           lsize [[ threads_per_threadgroup        ]])
+
+// Вычислительный шейдер
+kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    // Выходные позиции
+                                 device float4* const vel_1 [[ buffer(1) ]],    // Выходные ускорения
+                                 constant float4* const pos_0 [[ buffer(2) ]],  // Позиции предыдущего кадра
+                                 constant float4* const vel_0 [[ buffer(3) ]],  // Ускорения предыдущего кадра
+                                 constant NBodyPrefs& prefs [[ buffer(4) ]],    // Настройки
+                                 
+                                 threadgroup float4* pos_s [[ threadgroup(0) ]], // Буфферные данные на отдельную тредгруппу
+                                 
+                                 const ushort positionInAllGrid [[ thread_position_in_grid ]],
+                                 const ushort localPosInGroup [[ thread_position_in_threadgroup ]],
+                                 const ushort threadsCountOnGroup [[ threads_per_threadgroup ]])
 {
     ushort tile = 0;
-    ushort k    = lid;
-    
-    float4 pos  = pos_0[gid];
-    float4 vel  = 0.0f;
-    float3 acc  = 0.0f;
+    ushort k = localPosInGroup;
     
     ushort i, j;
     
-    const ushort particles    = prefs.particles;
-    const float  softeningSqr = prefs.softeningSqr;
+    // Общее количество партиклов
+    const ushort particles = prefs.particles;
     
-    for(i = 0; i < particles ; i += lsize, ++tile)
-    {
-        pos_s[lid] = pos_0[k];
+    const float softeningSqr = prefs.softeningSqr;
+    
+    // Предыдущая позиция в сетке
+    float4 oldPos = pos_0[positionInAllGrid];
+    
+    // Переменные для скорости и ускорения
+    float4 vel = 0.0f;
+    float3 acc = 0.0f;
+    
+    // Обходим все точки с шагом размером равным количеству потоков в тредгруппу
+    for(i = 0; i < particles; i += threadsCountOnGroup, ++tile){
+        // TODO: ???
+        pos_s[localPosInGroup] = pos_0[k];
         
         j = 0;
+        while(j < threadsCountOnGroup) {
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+        }
         
-        while(j < lsize)
-        {
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], pos, softeningSqr);
-        } // for
-        
-        k += lsize;
-    } // for
+        k += threadsCountOnGroup;
+    }
     
-    vel = vel_0[gid];
+    // Получаем старое ускорение данной точки
+    vel = vel_0[positionInAllGrid];
     
+    // Меняем скорость данной точки на основе рассчитанного ускорения
     vel.xyz += acc * prefs.timestep;
-    vel.xyz *= prefs.damping;
-    pos.xyz += vel.xyz * prefs.timestep;
     
-    pos_1[gid] = pos;
-    vel_1[gid] = vel;
-} // NBodyIntegrateSystem
+    // Умножаем скорость на затухание
+    vel.xyz *= prefs.damping;
+    
+    // Обновляем позицию точки на основе скорости движения
+    oldPos.xyz += vel.xyz * prefs.timestep;
+    
+    // Записываем полученное значение позиции и скорости
+    pos_1[positionInAllGrid] = oldPos;
+    vel_1[positionInAllGrid] = vel;
+}
