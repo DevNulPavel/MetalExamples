@@ -18,10 +18,10 @@
     uint32_t  _texRes;
     uint32_t  _colorChannelsCount;
     
-    NSMutableDictionary* mpGlobals;
-    NSMutableDictionary* mpParameters;
+    NSMutableDictionary* _globalParameters;
+    NSMutableArray* _allSimulationProperties;
     
-    NSMutableArray* mpProperties;
+    NSMutableDictionary* _activeSimulationParameters;
 }
 
 - (nullable NSMutableDictionary *) _newProperties:(nullable NSString *)pFileName {
@@ -74,25 +74,25 @@
         
         if(pProperties){
             // Получаем глобальные настройки по ключу
-            mpGlobals = pProperties[kNBodyGlobals];
+            _globalParameters = pProperties[kNBodyGlobals];
             
-            if(mpGlobals){
+            if(_globalParameters){
                 // Количество партиклов
-                _totalParticlesCount = [mpGlobals[kNBodyParticles] unsignedIntValue];
+                _totalParticlesCount = [_globalParameters[kNBodyParticles] unsignedIntValue];
                 // Разрешение текстуры
-                _texRes    = [mpGlobals[kNBodyTexRes]    unsignedIntValue];
+                _texRes    = [_globalParameters[kNBodyTexRes]    unsignedIntValue];
                 // Количество каналов цветов
-                _colorChannelsCount  = [mpGlobals[kNBodyChannels]  unsignedIntValue];
+                _colorChannelsCount  = [_globalParameters[kNBodyChannels]  unsignedIntValue];
             }
             
             // Получаем свойства каждой отдельной анимации
-            mpProperties = pProperties[kNBodyParameters];
-            if(mpProperties){
-                _simulationsTotalCount  = uint32_t(mpProperties.count);
+            _allSimulationProperties = pProperties[kNBodyParameters];
+            if(_allSimulationProperties){
+                _simulationsTotalCount  = uint32_t(_allSimulationProperties.count);
                 _activeSimulationConfigIndex = _simulationsTotalCount;
             }
             
-            mpParameters = nil;
+            _activeSimulationParameters = nil;
         }
     }
     return self;
@@ -104,12 +104,12 @@
 
 // Получаем глобальные параметры из конфига
 - (NSDictionary *) getGlobals {
-    return mpGlobals;
+    return _globalParameters;
 }
 
 // Параметры отдельных симуляций
-- (NSDictionary *) getActiveParameters {
-    return mpParameters;
+- (NSDictionary *) getActiveSimulationParameters {
+    return _activeSimulationParameters;
 }
 
 // Выбираем конфиг симуляции
@@ -117,7 +117,7 @@
     if(config != _activeSimulationConfigIndex){
         _activeSimulationConfigIndex = config;
         
-        mpParameters = mpProperties[_activeSimulationConfigIndex];
+        _activeSimulationParameters = _allSimulationProperties[_activeSimulationConfigIndex];
     }
 }
 
@@ -128,7 +128,7 @@
     if(ptparticles != _totalParticlesCount){
         _totalParticlesCount = ptparticles;
         
-        mpGlobals[kNBodyParticles] = @(_totalParticlesCount);
+        _globalParameters[kNBodyParticles] = @(_totalParticlesCount);
     }
 }
 
@@ -139,7 +139,7 @@
     if(nChannels != _colorChannelsCount){
         _colorChannelsCount = nChannels;
         
-        mpGlobals[kNBodyChannels] = @(_colorChannelsCount);
+        _globalParameters[kNBodyChannels] = @(_colorChannelsCount);
     }
 }
 
@@ -150,7 +150,7 @@
     if(nTexRes != _texRes){
         _texRes = nTexRes;
         
-        mpGlobals[kNBodyTexRes] = @(_texRes);
+        _globalParameters[kNBodyTexRes] = @(_texRes);
     }
 }
 

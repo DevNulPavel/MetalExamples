@@ -106,6 +106,7 @@
             return NO;
         }
         
+        // Количество симуляций
         mnCount = mpProperties.simulationsTotalCount;
         
         if(!mnCount){
@@ -155,11 +156,11 @@
     mpProperties.activeSimulationConfigIndex = _active;
     
     // Генерируем начальные данные для симуляции
-    mpGenerator.parameters = mpProperties.getActiveParameters;
+    mpGenerator.parameters = [mpProperties getActiveSimulationParameters];
     mpGenerator.colors     = mpPresenter.colors;
     mpGenerator.position   = mpPresenter.position;
     mpGenerator.velocity   = mpPresenter.velocity;
-    mpGenerator.config     = _config;
+    [mpGenerator setConfigId:_config];
 }
 
 // Создание всех необходимых ресурсов для симуляции
@@ -178,7 +179,7 @@
 // Рендерим новый кадр
 - (void) _renderFrame:(nullable id<CAMetalDrawable>)drawable{
     mpPresenter.aspect     = _aspect;                 // Обновляем соотношение сторон
-    mpPresenter.parameters = mpProperties.getActiveParameters; // Обновляем параметры симуляции
+    mpPresenter.parameters = [mpProperties getActiveSimulationParameters]; // Обновляем параметры симуляции
     mpPresenter.drawable   = drawable;                // Обновляем рисуемый объект и вызываем отрисовку
 }
 

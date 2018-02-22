@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface NBodyProperties : NSObject
+@interface NBodyProperties: NSObject
 
 // Выбираем новую конфигурацию симуляции
 @property (nonatomic, setter=setActiveSimulationConfigIndex:) uint32_t activeSimulationConfigIndex;
@@ -27,6 +27,6 @@
 // Словарь с глобальными параметрами симуляций
 - (nonnull NSDictionary *)getGlobals;
 // Параметры для текущей симуляций
-- (nonnull NSDictionary *)getActiveParameters;
+- (nonnull NSDictionary *)getActiveSimulationParameters;
 
 @end

@@ -10,10 +10,6 @@
 		<integer>8096</integer>
 		<key>NBody_Tex_Res</key>
 		<integer>64</integer>
-		<key>1_NBody_Particles</key>
-		<integer>16192</integer>
-		<key>2_NBody_Particles</key>
-		<integer>32384</integer>
 	</dict>
 	<key>NBody_Parameters</key>
 	<array>

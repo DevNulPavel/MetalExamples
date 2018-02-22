@@ -12,23 +12,23 @@
 
 @interface NBodyURDGenerator : NSObject
 
-// Generate a inital simulation data
-@property (nonatomic, setter=acquire:) uint32_t config;
-
-// N-body simulation global parameters
-@property (nullable, nonatomic) NSDictionary* globals;
-
-// N-body parameters for simulation types
-@property (nullable, nonatomic) NSDictionary* parameters;
-
-// Coordinate points on the Eunclidean axis of simulation
-@property (nonatomic) simd::float3 axis;
-
-// Position and velocity pointers
+// Указатель на данные позиций и ускорений
 @property (nullable) simd::float4* position;
 @property (nullable) simd::float4* velocity;
 
-// Colors pointer
-@property (nullable, nonatomic) simd::float4* colors;
+// Установка указателя для данные цвета
+@property (nullable, nonatomic, setter=setColors:) simd::float4* colors;
+
+// Coordinate points on the Eunclidean axis of simulation
+@property (nonatomic, setter=setAxis:) simd::float3 axis;
+
+// Генерация начальных данных для симуляции
+- (void)setConfigId:(uint32_t)config;
+
+// Установка глобальных параметров из конфига
+- (void)setGlobals:(nonnull NSDictionary*)globals;
+
+// Установка параметров конкретной симуляции
+- (void)setParameters:(nonnull NSDictionary*)parameters;
 
 @end
