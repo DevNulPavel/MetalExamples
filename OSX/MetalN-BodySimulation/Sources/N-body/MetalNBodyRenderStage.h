@@ -52,4 +52,6 @@
 // Encode vertex and fragment stages
 @property (nullable, nonatomic, setter=encode:) id<CAMetalDrawable> drawable;
 
+- (void)encode;
+
 @end

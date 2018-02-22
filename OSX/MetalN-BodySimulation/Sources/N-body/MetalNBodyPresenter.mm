@@ -19,14 +19,14 @@
     BOOL _isEncoded;
     
     NSDictionary* _globals;
-    NSDictionary* _parameters;
+    NSDictionary* _activeParameters;
     
-    id<MTLLibrary>        m_Library;
-    id<MTLCommandBuffer>  m_CmdBuffer;
-    id<MTLCommandQueue>   m_CmdQueue;
+    id<MTLLibrary>        _library;
+    id<MTLCommandBuffer>  _commandBuffer;
+    id<MTLCommandQueue>   _commandQueue;
     
-    MetalNBodyRenderStage*   mpRender;
-    MetalNBodyComputeStage*  mpCompute;
+    MetalNBodyRenderStage*   _renderStage;
+    MetalNBodyComputeStage*  _computeStage;
 }
 
 - (instancetype) init {
@@ -37,228 +37,200 @@
         _isEncoded   = NO;
         
         _globals    = nil;
-        _parameters = nil;
+        _activeParameters = nil;
         
-        m_CmdBuffer = nil;
-        m_CmdQueue  = nil;
-        m_Library   = nil;
+        _commandBuffer = nil;
+        _commandQueue  = nil;
+        _library   = nil;
         
-        mpRender  = nil;
-        mpCompute = nil;
+        _renderStage  = nil;
+        _computeStage = nil;
     }
     
     return self;
-} // init
+}
 
-// N-body simulation global parameters
-- (void) setGlobals:(NSDictionary *)globals
-{
+// Установка глобальных параметров симуляции
+- (void)setGlobals:(NSDictionary *)globals {
     _globals = globals;
     
-    if(mpRender)
-    {
-        mpRender.globals = _globals;
-    } // if
-} // setParameters
+    if(_renderStage) {
+        _renderStage.globals = _globals;
+    }
+}
 
 // N-body parameters for simulation types
-- (void) setParameters:(NSDictionary *)parameters
-{
-    _parameters = parameters;
+- (void)setActiveParameters:(NSDictionary *)parameters {
+    _activeParameters = parameters;
     
-    if(mpRender)
-    {
-        mpRender.parameters = _parameters;
-    } // if
-} // setParameters
+    if(_renderStage) {
+        _renderStage.parameters = _activeParameters;
+    }
+}
 
-// Aspect ratio
-- (void) setAspect:(float)aspect
-{
-    if(mpRender)
-    {
-        mpRender.aspect = aspect;
-    } // if
-} // setAspect
+// Установка соотношения сторон
+- (void)setAspect:(float)aspect {
+    if(_renderStage){
+        _renderStage.aspect = aspect;
+    }
+}
 
-// Orthographic projection configuration type
-- (void) setConfig:(uint32_t)config
-{
-    if(mpRender)
-    {
-        mpRender.config = config;
-    } // if
-} // setConfig
+// Установка типа ортографической проекции
+- (void)setConfig:(uint32_t)config {
+    if(_renderStage) {
+        _renderStage.config = config;
+    }
+}
 
-// Update the linear transformation mvp matrix
-- (void) setUpdate:(BOOL)update
-{
-    if(mpRender)
-    {
-        mpRender.update = update;
-    } // if
-} // setUpdate
+// Обновление трансформации матрицы модели-вида-проекции
+- (void)setUpdate:(BOOL)update {
+    if(_renderStage){
+        _renderStage.update = update;
+    }
+}
 
-// Color host pointer
-- (nullable simd::float4 *) colors
-{
+// Указатель на данные цветов
+- (nullable simd::float4 *)getColorsPointer{
     simd::float4* pColors = nullptr;
     
-    if(mpRender)
-    {
-        pColors = mpRender.colors;
-    } // if
+    if(_renderStage) {
+        pColors = _renderStage.colors;
+    }
 
     return pColors;
-} // colors
+}
 
-// Position host pointer
-- (nullable simd::float4 *) position
-{
+// Указатель на данные позиций
+- (nullable simd::float4*)getPositionsPointer {
     simd::float4* pPosition = nullptr;
     
-    if(mpCompute)
-    {
-        pPosition = mpCompute.position;
-    } // if
+    if(_computeStage){
+        pPosition = _computeStage.position;
+    }
     
     return pPosition;
-} // position
+}
 
-// Velocity host pointer
-- (nullable simd::float4 *) velocity
-{
+// Указатель на данные ускорений
+- (nullable simd::float4 *)getVelocityPointer{
     simd::float4* pVelocity = nullptr;
     
-    if(mpCompute)
-    {
-        pVelocity = mpCompute.velocity;
-    } // if
+    if(_computeStage){
+        pVelocity = _computeStage.velocity;
+    }
     
     return pVelocity;
-} // velocity
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        m_Library = [device newDefaultLibrary];
+- (BOOL)acquire:(nullable id<MTLDevice>)device {
+    if(device) {
+        // Получаем указатель на библиотеку
+        _library = [device newDefaultLibrary];
         
-        if(!m_Library)
-        {
+        if(!_library){
             NSLog(@">> ERROR: Failed to instantiate a new default m_Library!");
-            
             return NO;
-        } // if
+        }
         
-        m_CmdQueue = [device newCommandQueue];
-        
-        if(!m_CmdQueue)
-        {
+        // Получаем очередь комманд
+        _commandQueue = [device newCommandQueue];
+        if(!_commandQueue){
             NSLog(@">> ERROR: Failed to instantiate a new command queue!");
-            
             return NO;
-        } // if
+        }
         
-        mpCompute = [MetalNBodyComputeStage new];
-        
-        if(!mpCompute)
-        {
+        // Создаем вычислительный стейдж
+        _computeStage = [MetalNBodyComputeStage new];
+        if(!_computeStage){
             NSLog(@">> ERROR: Failed to instantiate a N-Body compute object!");
-            
             return NO;
-        } // if
+        }
         
-        mpCompute.globals = _globals;
-        mpCompute.library = m_Library;
-        mpCompute.device  = device;
+        // Обновляем параметры в вычислительном стейдже
+        _computeStage.globals = _globals;
+        _computeStage.library = _library;
+        _computeStage.device  = device;
         
-        if(!mpCompute.isStaged)
-        {
+        // Инициализированная ли вычислительная стадия?
+        if(!_computeStage.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body compute resources!");
-            
             return NO;
-        } // if
+        }
 
-        mpRender = [MetalNBodyRenderStage new];
-        
-        if(!mpRender)
-        {
+        // Создаем стейдж рендеринга
+        _renderStage = [MetalNBodyRenderStage new];
+        if(!_renderStage) {
             NSLog(@">> ERROR: Failed to instantiate a N-Body render stage object!");
-            
             return NO;
-        } // if
+        }
         
-        mpRender.globals = _globals;
-        mpRender.library = m_Library;
-        mpRender.device  = device;
+        // Обновляем параметры в стейдже рендеринга
+        _renderStage.globals = _globals;
+        _renderStage.library = _library;
+        _renderStage.device  = device;
 
-        if(!mpRender.isStaged)
-        {
+        // Инициализированная ли рендер стадия?
+        if(!_renderStage.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body render stage resources!");
-
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // acquire
+}
 
-// Generate all the resources (including fragment, vertex and compute stages)
-// for rendering N-Body simulation
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveEncoder)
-    {
-        _haveEncoder = [self _acquire:device];
-    } // if
-} // acquire
 
-- (BOOL) _encode:(nullable id<CAMetalDrawable>)drawable
-{
-    m_CmdBuffer = [m_CmdQueue commandBuffer];
+// Генерация  необходимых ресурсов для симуляции
+- (void)initWithDevice:(nullable id<MTLDevice>)device {
+    if(!_haveEncoder){
+        _haveEncoder = [self acquire:device];
+    }
+}
+
+// Выполняем энкодинг для drawable объекта
+- (void)encodeForDrawable:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock {
+    _isEncoded = NO;
     
-    if(!m_CmdBuffer)
-    {
+    // Создаем новый command buffer
+    _commandBuffer = [_commandQueue commandBuffer];
+    if(!_commandBuffer){
         NSLog(@">> ERROR: Failed to acquire a command buffer!");
+        _isEncoded = NO;
+        return;
+    }
+    
+    // Обновляем параметры вычислительной стадии и выполняем задачи по вычислению на GPU
+    _computeStage.parameters = _activeParameters;
+    _computeStage.cmdBuffer  = _commandBuffer;
+    
+    // TODO: Надо получать drawable как можно ближе к present, чтобы не было ворнинга
+    id<CAMetalDrawable> drawable = drawableBlock();
+    if(drawable){
+        // Обновляем данные для рендеринга, вызываем рендеринг
+        _renderStage.positions = _computeStage.buffer;
+        _renderStage.cmdBuffer = _commandBuffer;
+        _renderStage.drawable  = drawable;
         
-        return NO;
-    } // if
+        // Отображаем и коммитим
+        [_commandBuffer presentDrawable:drawable];
+        [_commandBuffer commit];
+        
+        // Вызываем цикличную смену вычислительных буфферов
+        [_computeStage swapBuffers];
+    }
     
-    mpCompute.parameters = _parameters;
-    mpCompute.cmdBuffer  = m_CmdBuffer;
-    
-    mpRender.positions = mpCompute.buffer;
-    mpRender.cmdBuffer = m_CmdBuffer;
-    mpRender.drawable  = drawable;
-    
-    [m_CmdBuffer presentDrawable:drawable];
-    [m_CmdBuffer commit];
-    
-    [mpCompute swapBuffers];
-    
-    return YES;
-} // _encode
+    _isEncoded = YES;
+}
 
-// Encode vertex, fragment, and compute stages, then present the drawable
-- (void) encode:(nullable id<CAMetalDrawable>)drawable
-{
-    _isEncoded = [self _encode:drawable];
-} // encode
-
-// Wait until the render encoding is complete
-- (void) finish
-{
-    if(m_CmdBuffer)
-    {
-        [m_CmdBuffer waitUntilCompleted];
-    } // if
-} // finish
+// Ждем пока рендер-энкодер завершит свою работу
+- (void) finish {
+    if(_commandBuffer){
+        [_commandBuffer waitUntilCompleted];
+    }
+}
 
 @end

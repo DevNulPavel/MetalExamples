@@ -37,9 +37,9 @@ namespace NBody {
         namespace Configs{
             enum: uint8_t {
                 eRandom = 0,
-                eShell,
-                eExpand,
-                eCount
+                eShell = 1,
+                eExpand = 2,
+                eCount = 3
             };
         }
     }

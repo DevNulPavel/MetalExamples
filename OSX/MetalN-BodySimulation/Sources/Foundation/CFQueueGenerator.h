@@ -10,17 +10,16 @@
 
 @interface CFQueueGenerator : NSObject
 
-// Desired dispatch queue attribute.  Defaults to serial.
-@property (nullable) dispatch_queue_attr_t attribute;
+// Аттрибуты очереди - по-умолчанию последовательная
+@property (nullable, getter=getAttribute, setter=setAttribute:) dispatch_queue_attr_t attribute;
+// Имя очереди
+@property (nullable, nonatomic, getter=getLabel, setter=setLabel:) const char* label;
 
-// Dispatch queue identifier
-@property (nullable, nonatomic, readonly) const char* identifier;
 
-// Dispatch queue label
-@property (nullable, nonatomic) const char* label;
+// Идентификатор
+- (nullable const char*)getIdentifier;
 
-// A dispatch queue created with the set attribute.
-// Defaults to a serial dispatch queue.
-@property (nullable, nonatomic, readonly) dispatch_queue_t queue;
+// Генерация новой очереди
+- (nullable dispatch_queue_t)generateQueue;
 
 @end

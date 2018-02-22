@@ -113,7 +113,7 @@
 }
 
 // Выбираем конфиг симуляции
-- (void) setActiveSimulationConfigIndex:(uint32_t)config {
+- (void)setActiveSimulationConfigIndex:(uint32_t)config {
     if(config != _activeSimulationConfigIndex){
         _activeSimulationConfigIndex = config;
         

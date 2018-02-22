@@ -46,6 +46,6 @@
 - (void) acquire:(nullable id<MTLDevice>)device;
 
 // Выполняем рендеринг
-- (void)render:(nullable id<CAMetalDrawable>)drawable;
+- (void)render:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock;
 
 @end

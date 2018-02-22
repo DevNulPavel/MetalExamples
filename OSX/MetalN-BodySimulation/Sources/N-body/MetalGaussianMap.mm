@@ -145,14 +145,14 @@ typedef enum : uint32_t
         {
             mpQGen.label = "com.apple.metal.gaussianmap.ycoord";
             
-            m_DQueue[0] = mpQGen.queue;
+            m_DQueue[0] = mpQGen.generateQueue;
         } // if
         
         if(!m_DQueue[1])
         {
             mpQGen.label = "com.apple.metal.gaussianmap.xcoord";
             
-            m_DQueue[1] = mpQGen.queue;
+            m_DQueue[1] = mpQGen.generateQueue;
         } // if
     } // if
 

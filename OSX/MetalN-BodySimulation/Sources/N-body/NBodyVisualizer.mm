@@ -108,7 +108,6 @@
         
         // Количество симуляций
         mnCount = mpProperties.simulationsTotalCount;
-        
         if(!mnCount){
             NSLog(@">> ERROR: Empty array for N-Body properties!");
             return NO;
@@ -116,7 +115,6 @@
         
         // Создаем генерато для инициализации данных
         mpGenerator = [NBodyURDGenerator new];
-        
         if(!mpGenerator){
             NSLog(@">> ERROR: Failed to instantiate uniform random distribution object!");
             return NO;
@@ -124,14 +122,13 @@
         
         // Создаем рендер для нашего пространства
         mpPresenter = [MetalNBodyPresenter new];
-        
         if(!mpPresenter){
             NSLog(@">> ERROR: Failed to instantiate Metal render encoder object!");
             return NO;
         }
-                
-        mpPresenter.globals = mpProperties.getGlobals;
-        mpPresenter.device  = device;
+        
+        [mpPresenter setGlobals:[mpProperties getGlobals]];
+        [mpPresenter initWithDevice:device];
         
         // Проверяем наличие энкодера у рендера
         if(!mpPresenter.haveEncoder){
@@ -150,16 +147,16 @@
     NSLog(@">> MESSAGE[N-Body]: Demo [%u] selected!", _active);
     
     // Обновляем матрицу линейной трансформации
-    mpPresenter.update = YES;
+    [mpPresenter setUpdate:YES];
     
     // Выставляем словарь настроек симуляции
     mpProperties.activeSimulationConfigIndex = _active;
     
     // Генерируем начальные данные для симуляции
     mpGenerator.parameters = [mpProperties getActiveSimulationParameters];
-    mpGenerator.colors     = mpPresenter.colors;
-    mpGenerator.position   = mpPresenter.position;
-    mpGenerator.velocity   = mpPresenter.velocity;
+    mpGenerator.colors     = [mpPresenter getColorsPointer];
+    mpGenerator.position   = [mpPresenter getPositionsPointer];
+    mpGenerator.velocity   = [mpPresenter getVelocityPointer];
     [mpGenerator setConfigId:_config];
 }
 
@@ -177,14 +174,14 @@
 }
 
 // Рендерим новый кадр
-- (void) _renderFrame:(nullable id<CAMetalDrawable>)drawable{
-    mpPresenter.aspect     = _aspect;                 // Обновляем соотношение сторон
-    mpPresenter.parameters = [mpProperties getActiveSimulationParameters]; // Обновляем параметры симуляции
-    mpPresenter.drawable   = drawable;                // Обновляем рисуемый объект и вызываем отрисовку
+- (void)renderFrame:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock{
+    [mpPresenter setAspect:_aspect];                 // Обновляем соотношение сторон
+    [mpPresenter setActiveParameters:[mpProperties getActiveSimulationParameters]]; // Обновляем параметры симуляции
+    [mpPresenter encodeForDrawable:drawableBlock];                // Обновляем рисуемый объект и вызываем отрисовку
 }
 
 // Переход на новый кадр
-- (void) _nextFrame {
+- (void)nextFrame {
     _frame++;
 
     // Как только достигаем максимума кадров данной симуляции - переходим к следующей симуляции
@@ -202,11 +199,9 @@
 }
 
 // Рендеринг кадра симуляции
-- (void) render:(nullable id<CAMetalDrawable>)drawable {
-    if(drawable) {
-        [self _renderFrame:drawable];
-        [self _nextFrame];
-    }
+- (void) render:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock {
+    [self renderFrame:drawableBlock];
+    [self nextFrame];
 }
 
 @end

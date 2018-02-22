@@ -198,7 +198,7 @@ typedef struct NBodyScales NBodyScales;
             if(pQGen){
                 pQGen.label = "com.apple.nbody.generator.main";
                 
-                _updateDispatchQueue = pQGen.queue;
+                _updateDispatchQueue = pQGen.generateQueue;
             }
         }
         

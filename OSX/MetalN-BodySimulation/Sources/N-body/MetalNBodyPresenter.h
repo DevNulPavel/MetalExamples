@@ -13,40 +13,45 @@
 
 @interface MetalNBodyPresenter : NSObject
 
-// Aspect ratio
-@property (nonatomic) float aspect;
-
-// Orthographic projection configuration type
-@property (nonatomic) uint32_t config;
-
-// Update the linear transformation mvp matrix
-@property (nonatomic) BOOL update;
-
-// N-body simulation global parameters
-@property (nullable, nonatomic) NSDictionary* globals;
-
-// N-body parameters for simulation types
-@property (nullable, nonatomic) NSDictionary* parameters;
-
-// Host pointers
-@property (nullable, nonatomic, readonly) simd::float4* position;
-@property (nullable, nonatomic, readonly) simd::float4* velocity;
-@property (nullable, nonatomic, readonly) simd::float4* colors;
-
 // Query to determine if all the resources are instantiated for render encoder object
 @property (readonly) BOOL haveEncoder;
 
-// Query to determine if all stages are encoded
+// Проверяем, завершены ли все стадии
 @property (readonly) BOOL isEncoded;
 
-// Generate all the resources (including fragment, vertex and compute stages)
-// for rendering N-Body simulation
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
 
-// Encode vertex, fragment, and compute stages, then present the drawable
-@property (nullable, nonatomic, setter=encode:) id<CAMetalDrawable> drawable;
+// Генерация  необходимых ресурсов для симуляции
+- (void)initWithDevice:(nullable id<MTLDevice>)device;
 
-// Wait until the render encoding is complete
-- (void) finish;
+// Установка глобальных параметров симуляции
+- (void)setGlobals:(nonnull NSDictionary *)globals;
+
+// Установка параметров симуляции
+- (void)setActiveParameters:(nonnull NSDictionary *)parameters;
+
+// Установка соотношения сторон
+- (void)setAspect:(float)aspect;
+
+// Установка типа ортографической проекции
+- (void)setConfig:(uint32_t)config;
+
+// Обновление трансформации матрицы модели-вида-проекции
+- (void)setUpdate:(BOOL)update;
+
+// Указатель на данные цветов
+- (nullable simd::float4 *)getColorsPointer;
+
+// Указатель на данные позиций
+- (nullable simd::float4*)getPositionsPointer;
+
+// Указатель на данные ускорений
+- (nullable simd::float4 *) getVelocityPointer;
+
+// Выполняем энкодинг для drawable объекта
+- (void) encodeForDrawable:(nonnull id<CAMetalDrawable> (^)(void))drawableBlock;
+
+// Ждем пока рендер-энкодер завершит свою работу
+- (void)finish;
+
 
 @end

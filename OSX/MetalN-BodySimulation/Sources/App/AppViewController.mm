@@ -81,8 +81,11 @@
         @autoreleasepool {
             [self update:view];
             
+            id<CAMetalDrawable> (^getDrawableBlock)(void) = ^{
+                return view.currentDrawable;
+            };
             // Вызываем отрисовку партиклов для симуляции тела из сеттера
-            [mpVisualizer render:view.currentDrawable];
+            [mpVisualizer render:getDrawableBlock];
         }
     }
 }
