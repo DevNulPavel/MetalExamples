@@ -11,7 +11,7 @@
 #import "CMNumerics.h"
 
 #import "NBodyDefaults.h"
-#import "NBodyPreferences.h"
+#import "NBodyPreferencesKeys.h"
 #import "NBodyProperties.h"
 #import "NBodyURDGenerator.h"
 #import "MetalNBodyPresenter.h"
@@ -80,7 +80,7 @@
 // Количество партиклов
 - (void) setParticles:(uint32_t)particles {
     if(!_haveVisualizer){
-        mpProperties.particles = _particles = (particles) ? particles : NBody::Defaults::kParticles;
+        mpProperties.totalParticlesCount = _particles = (particles) ? particles : NBody::Defaults::kParticles;
     }
 }
 
@@ -106,7 +106,7 @@
             return NO;
         }
         
-        mnCount = mpProperties.count;
+        mnCount = mpProperties.simulationsTotalCount;
         
         if(!mnCount){
             NSLog(@">> ERROR: Empty array for N-Body properties!");
@@ -129,7 +129,7 @@
             return NO;
         }
                 
-        mpPresenter.globals = mpProperties.globals;
+        mpPresenter.globals = mpProperties.getGlobals;
         mpPresenter.device  = device;
         
         // Проверяем наличие энкодера у рендера
@@ -152,10 +152,10 @@
     mpPresenter.update = YES;
     
     // Выставляем словарь настроек симуляции
-    mpProperties.config = _active;
+    mpProperties.activeSimulationConfigIndex = _active;
     
     // Генерируем начальные данные для симуляции
-    mpGenerator.parameters = mpProperties.parameters;
+    mpGenerator.parameters = mpProperties.getActiveParameters;
     mpGenerator.colors     = mpPresenter.colors;
     mpGenerator.position   = mpPresenter.position;
     mpGenerator.velocity   = mpPresenter.velocity;
@@ -178,7 +178,7 @@
 // Рендерим новый кадр
 - (void) _renderFrame:(nullable id<CAMetalDrawable>)drawable{
     mpPresenter.aspect     = _aspect;                 // Обновляем соотношение сторон
-    mpPresenter.parameters = mpProperties.parameters; // Обновляем параметры симуляции
+    mpPresenter.parameters = mpProperties.getActiveParameters; // Обновляем параметры симуляции
     mpPresenter.drawable   = drawable;                // Обновляем рисуемый объект и вызываем отрисовку
 }
 

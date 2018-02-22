@@ -12,7 +12,7 @@
 #import "CMRandom.h"
 
 #import "NBodyDefaults.h"
-#import "NBodyPreferences.h"
+#import "NBodyPreferencesKeys.h"
 
 #import "NBodyURDGenerator.h"
 

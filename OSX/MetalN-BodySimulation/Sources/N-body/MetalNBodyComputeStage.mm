@@ -9,7 +9,7 @@
 #import "CMNumerics.h"
 
 #import "NBodyDefaults.h"
-#import "NBodyPreferences.h"
+#import "NBodyPreferencesKeys.h"
 #import "NBodyComputePrefs.h"
 
 #import "MetalNBodyComputeStage.h"

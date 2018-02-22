@@ -7,7 +7,7 @@
  */
 
 #import "NBodyDefaults.h"
-#import "NBodyPreferences.h"
+#import "NBodyPreferencesKeys.h"
 
 #import "MetalNBodyRenderPipeline.h"
 #import "MetalNBodyRenderPassDescriptor.h"

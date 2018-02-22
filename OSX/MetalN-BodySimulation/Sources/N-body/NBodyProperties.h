@@ -10,29 +10,23 @@
 
 @interface NBodyProperties : NSObject
 
-// Designated initializer for loading the property list file containing
-// global and simulation parameters
-- (nullable instancetype) initWithFile:(nullable NSString *)fileName;
+// Выбираем новую конфигурацию симуляции
+@property (nonatomic, setter=setActiveSimulationConfigIndex:) uint32_t activeSimulationConfigIndex;
+// Количество цветов
+@property (nonatomic, setter=setColorChannelsCount:) uint32_t colorChannelsCount;
+// Количество партиклов
+@property (nonatomic, setter=setTotalParticlesCount:) uint32_t totalParticlesCount;
+// Разрешение текстуры - стандартно 64x64
+@property (nonatomic, setter=setTexRes:) uint32_t texRes;
+// Общее количество различных типов симуляций
+@property (readonly) uint32_t simulationsTotalCount;
 
-// Select the specific type of N-body simulation
-@property (nonatomic) uint32_t config;
 
-// Number of color channels.  Default is 4 for RGBA.
-@property (nonatomic) uint32_t channels;
-
-// Number of point particles
-@property (nonatomic) uint32_t particles;
-
-// Texture resolution.  The default is 64x64.
-@property (nonatomic) uint32_t texRes;
-
-// The number of N-body simulation types
-@property (readonly) uint32_t count;
-
-// N-body simulation global parameters
-@property (nullable, nonatomic, readonly) NSDictionary* globals;
-
-// N-body parameters for simulation types
-@property (nullable, nonatomic, readonly) NSDictionary* parameters;
+// Загрузка свойств из файлика plist
+- (nullable instancetype)initWithFile:(nullable NSString *)fileName;
+// Словарь с глобальными параметрами симуляций
+- (nonnull NSDictionary *)getGlobals;
+// Параметры для текущей симуляций
+- (nonnull NSDictionary *)getActiveParameters;
 
 @end

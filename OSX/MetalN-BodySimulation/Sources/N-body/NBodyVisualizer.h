@@ -45,6 +45,7 @@
 // Создание всех необходимых ресурсов для симуляции
 - (void) acquire:(nullable id<MTLDevice>)device;
 
+// Выполняем рендеринг
 - (void)render:(nullable id<CAMetalDrawable>)drawable;
 
 @end

@@ -35,7 +35,7 @@
 		36FF37391BE97AD8009CF055 /* MetalNBodySampler.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF37261BE97AD8009CF055 /* MetalNBodySampler.mm */; };
 		36FF373A1BE97AD8009CF055 /* MetalNBodyTransform.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF37281BE97AD8009CF055 /* MetalNBodyTransform.mm */; };
 		36FF373B1BE97AD8009CF055 /* MetalNBody.metal in Sources */ = {isa = PBXBuildFile; fileRef = 36FF37291BE97AD8009CF055 /* MetalNBody.metal */; };
-		36FF373C1BE97AD8009CF055 /* NBodyPreferences.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF372D1BE97AD8009CF055 /* NBodyPreferences.mm */; };
+		36FF373C1BE97AD8009CF055 /* NBodyPreferencesKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF372D1BE97AD8009CF055 /* NBodyPreferencesKeys.mm */; };
 		36FF373D1BE97AD8009CF055 /* NBodyProperties.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF372F1BE97AD8009CF055 /* NBodyProperties.mm */; };
 		36FF373E1BE97AD8009CF055 /* NBodyVisualizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF37311BE97AD8009CF055 /* NBodyVisualizer.mm */; };
 		36FF373F1BE97AD8009CF055 /* NBodyURDGenerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36FF37331BE97AD8009CF055 /* NBodyURDGenerator.mm */; };
@@ -90,8 +90,8 @@
 		36FF37291BE97AD8009CF055 /* MetalNBody.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalNBody.metal; sourceTree = "<group>"; };
 		36FF372A1BE97AD8009CF055 /* NBodyComputePrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyComputePrefs.h; sourceTree = "<group>"; };
 		36FF372B1BE97AD8009CF055 /* NBodyDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyDefaults.h; sourceTree = "<group>"; };
-		36FF372C1BE97AD8009CF055 /* NBodyPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyPreferences.h; sourceTree = "<group>"; };
-		36FF372D1BE97AD8009CF055 /* NBodyPreferences.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NBodyPreferences.mm; sourceTree = "<group>"; };
+		36FF372C1BE97AD8009CF055 /* NBodyPreferencesKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyPreferencesKeys.h; sourceTree = "<group>"; };
+		36FF372D1BE97AD8009CF055 /* NBodyPreferencesKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NBodyPreferencesKeys.mm; sourceTree = "<group>"; };
 		36FF372E1BE97AD8009CF055 /* NBodyProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyProperties.h; sourceTree = "<group>"; };
 		36FF372F1BE97AD8009CF055 /* NBodyProperties.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NBodyProperties.mm; sourceTree = "<group>"; };
 		36FF37301BE97AD8009CF055 /* NBodyVisualizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NBodyVisualizer.h; sourceTree = "<group>"; };
@@ -229,8 +229,8 @@
 		36DA5C701BFAC41200C77579 /* Properties */ = {
 			isa = PBXGroup;
 			children = (
-				36FF372C1BE97AD8009CF055 /* NBodyPreferences.h */,
-				36FF372D1BE97AD8009CF055 /* NBodyPreferences.mm */,
+				36FF372C1BE97AD8009CF055 /* NBodyPreferencesKeys.h */,
+				36FF372D1BE97AD8009CF055 /* NBodyPreferencesKeys.mm */,
 				36FF372E1BE97AD8009CF055 /* NBodyProperties.h */,
 				36FF372F1BE97AD8009CF055 /* NBodyProperties.mm */,
 			);
@@ -472,7 +472,7 @@
 				366F64551C066E4B00ABC28A /* CFQueueGenerator.mm in Sources */,
 				36FF373B1BE97AD8009CF055 /* MetalNBody.metal in Sources */,
 				36FF36E61BE977CC009CF055 /* CMTransforms.mm in Sources */,
-				36FF373C1BE97AD8009CF055 /* NBodyPreferences.mm in Sources */,
+				36FF373C1BE97AD8009CF055 /* NBodyPreferencesKeys.mm in Sources */,
 				36AC7FD31BEE806700474BED /* MetalNBodyFragmentStage.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
