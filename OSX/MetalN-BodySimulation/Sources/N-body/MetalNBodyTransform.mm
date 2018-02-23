@@ -28,8 +28,7 @@ static const simd::float3 kOrth2DBounds[6] =
     {50.0f, 50.0f, 50.0f}
 };
 
-@implementation MetalNBodyTransform
-{
+@implementation MetalNBodyTransform {
 @private
     BOOL _haveBuffer;
     BOOL _update;
@@ -41,6 +40,7 @@ static const simd::float3 kOrth2DBounds[6] =
     float _center;
     float _zCenter;
     
+    id<MTLDevice>  _device;
     id<MTLBuffer>  _buffer;
     
     simd::float4x4 _transform;
@@ -49,16 +49,14 @@ static const simd::float3 kOrth2DBounds[6] =
     simd::float4x4* mpTransform;
 
     simd::float4x4 m_View;
-    simd::float4x4 m_Projection;
+    simd::float4x4 _ortiProjection;
     simd::float4x4 m_Ortho2D;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self) {
         _haveBuffer = NO;
         _update     = NO;
         _device     = nil;
@@ -78,16 +76,16 @@ static const simd::float3 kOrth2DBounds[6] =
         m_View = translate * rotate1 * rotate2;
         
         m_Ortho2D    = 0.0f;
-        m_Projection = 0.0f;
+        _ortiProjection = 0.0f;
         
         mpTransform = nullptr;
-    } // if
+    }
     
     return self;
-} // init
+}
 
-- (void) _resize
-{
+// Создание ортографической проекции
+- (void) resize {
     // We scale up from the OpenCL version since the dimensions are approximately
     // twice as big on the iPad as on the default view.  Also, we don't use the
     // y bound, in order to keep the aspect ratio.
@@ -100,85 +98,69 @@ static const simd::float3 kOrth2DBounds[6] =
     const float near   =  _bounds.z * _zCenter;
     const float far    = -_bounds.z * _zCenter;
     
-    m_Projection = CM::ortho2d(left, right, bottom, top, near, far);
-} // _resize
+    _ortiProjection = CM::ortho2d(left, right, bottom, top, near, far);
+}
 
-// Update the mvp linear transformation matrix
-- (void) setUpdate:(BOOL)update
-{
-    if(update)
-    {        
-        *mpTransform = _transform = m_Projection * m_View;
-        
+// Обновляем финальную матрицу трансформации
+- (void)setUpdate:(BOOL)update {
+    if(update) {
+        *mpTransform = _transform = _ortiProjection * m_View;
         _update = update;
-    } // if
-} // setUpdate
+    }
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
+// Обновление переменной соотношения сторон
+- (void)setAspect:(float)aspect {
+    if(!CM::isEQ(aspect, _aspect)){
+        _aspect = aspect;
+        
+        [self resize];
+        
+        [self setUpdate:YES];
+    }
+}
+
+// Выполняем инициализацию для конкретногго устройства
+- (BOOL)acquire:(nullable id<MTLDevice>)device {
+    if(device){
         // Generate a Metal buffer for linear transformation matrix
         _buffer = [device newBufferWithLength:_size options:0];
         
-        if(!_buffer)
-        {
+        if(!_buffer){
             NSLog(@">> ERROR: Failed to instantiate a buffer for transformation matrix!");
-            
             return NO;
-        } // if
+        }
         
         // Liner transformation mvp matrix
         mpTransform = static_cast<simd::float4x4 *>([_buffer contents]);
         
-        if(!mpTransform)
-        {
+        if(!mpTransform){
             NSLog(@">> ERROR: Failed to acquire a host pointer to the transformation matrix buffer!");
-            
             return NO;
-        } // if
+        }
         
         return YES;
-    } // if
-    else
-    {
+    } else {
         NSLog(@">> ERROR: Metal device is nil!");
-    } // else
+    }
     
     return NO;
-} // _acquire
+}
 
-// Generate a Metal buffer and linear tranformations
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveBuffer)
-    {
-        _haveBuffer = [self _acquire:device];
-    } // if
-} // acquire
+// Выполняем инициализацию для конкретногго устройства
+- (void)prepareForDevice:(nullable id<MTLDevice>)device {
+    if(!_haveBuffer){
+        _haveBuffer = [self acquire:device];
+    }
+}
 
-// Set the aspect ratio for the orthographic 2d projection
-- (void) setAspect:(float)aspect
-{
-    if(!CM::isEQ(aspect, _aspect))
-    {
-        _aspect = aspect;
-        
-        [self _resize];
-        
-        [self setUpdate:YES];
-    } // if
-} // setAspect
-
-// Orthographic projection configuration type
-- (void) setConfig:(uint32_t)config
-{
-    if(config != _config)
-    {
+// Обновление конфигурации размера ортографической проекции
+- (void)setConfig:(uint32_t)config {
+    if(config != _config) {
         _config = config;
         _bounds = kOrth2DBounds[_config];
-    } // if
-} // setConfig
+    }
+}
 
 @end
 

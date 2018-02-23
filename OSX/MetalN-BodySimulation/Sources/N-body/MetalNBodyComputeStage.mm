@@ -175,7 +175,11 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         
         // Получаем количество потоков на группу
         // threadExecutionWidth - это количество потоков, которое дается на выполнение отдельной функции за один вызов
+        // точнее - количество гарантированно параллельный потоков
         _threadsDimentionX = _multiplier * _computePipelineState.threadExecutionWidth;
+        
+        // Максимальное количество потоков в группе потоков
+        //_threadsDimentionX = _multiplier * _computePipelineState.maxTotalThreadsPerThreadgroup;
         
         if((_preferences.particles % _threadsDimentionX) != 0) {
             NSLog(@">> ERROR: The number of bodies needs to be a multiple of the workgroup size!");

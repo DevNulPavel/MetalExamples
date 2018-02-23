@@ -7,7 +7,7 @@
 		<key>NBody_Channels</key>
 		<integer>4</integer>
 		<key>NBody_Particles</key>
-		<integer>6144</integer>
+		<integer>16384</integer>
 		<key>NBody_Tex_Res</key>
 		<integer>64</integer>
 	</dict>
@@ -19,9 +19,9 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>15</integer>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
-			<real>0.1</real>
+			<real>0.3</real>
 			<key>NBody_Timestep</key>
 			<real>0.016</real>
 			<key>NBody_Velocity_Scale</key>
@@ -33,7 +33,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<real>15</real>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
 			<integer>1</integer>
 			<key>NBody_Timestep</key>
@@ -47,9 +47,9 @@
 			<key>NBody_Damping</key>
 			<real>1</real>
 			<key>NBody_PointSize</key>
-			<real>15</real>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
-			<real>1</real>
+			<integer>1</integer>
 			<key>NBody_Timestep</key>
 			<real>0.0019</real>
 			<key>NBody_Velocity_Scale</key>
@@ -61,7 +61,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<real>15</real>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
 			<real>0.145</real>
 			<key>NBody_Timestep</key>
@@ -75,7 +75,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<real>15</real>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
 			<real>0.1</real>
 			<key>NBody_Timestep</key>
@@ -89,9 +89,9 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<real>15</real>
+			<integer>30</integer>
 			<key>NBody_Softening</key>
-			<real>1</real>
+			<integer>1</integer>
 			<key>NBody_Timestep</key>
 			<real>0.016</real>
 			<key>NBody_Velocity_Scale</key>

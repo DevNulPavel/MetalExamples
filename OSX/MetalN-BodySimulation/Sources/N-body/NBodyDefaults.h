@@ -15,7 +15,7 @@
 
 namespace NBody {
     namespace Defaults {
-        static const uint32_t kParticles = 1024 * 6;
+        static const uint32_t kParticles = 1024 * 16;
         static const uint32_t kChannels  = 4;
         static const uint32_t kFrames    = 60 * 30; // 60 кадров в сек * количество секунд
         static const uint32_t kTexRes    = 64;
@@ -23,7 +23,7 @@ namespace NBody {
         static const float kAspectRatio  = 1.0f;
         static const float kCenter       = 0.5;
         static const float kDamping      = 1.0f;
-        static const float kPointSz      = 10.0f;
+        static const float kPointSz      = 30.0f;
         static const float kSofteningSqr = 1.0f;
         static const float kTolerance    = 1.0e-9;
         static const float kTimestep     = 0.016f;

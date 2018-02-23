@@ -84,7 +84,7 @@
 {
     if(mpTransform)
     {
-        mpTransform.aspect = aspect;
+        [mpTransform setAspect:aspect];
     } // if
 } // setAspect
 
@@ -102,7 +102,7 @@
 {
     if(mpTransform)
     {
-        mpTransform.update = update;
+        [mpTransform setUpdate:update];
     } // if
 } // setUpdate
 
@@ -171,7 +171,7 @@
             return NO;
         } // if
         
-        mpTransform.device = device;
+        [mpTransform prepareForDevice:device];
         
         if(!mpTransform.haveBuffer)
         {

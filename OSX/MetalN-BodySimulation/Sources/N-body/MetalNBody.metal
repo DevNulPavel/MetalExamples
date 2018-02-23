@@ -18,8 +18,7 @@ using namespace metal;
 //
 //--------------------------------------------------
 
-typedef struct
-{
+typedef struct {
     float4 position  [[position]];
     half4  color;
     float  pointSize [[point_size]];
@@ -41,7 +40,7 @@ vertex FragColor NBodyLightingVertex(device float4*     positionRead        [[ b
     outColor.position = float4(modelViewProjection * inPosition);
     
     return outColor;
-} // NBodyLightingVertex
+}
 
 fragment half4 NBodyLightingFragment(FragColor        inColor      [[ stage_in    ]],
                                      texture2d<half>  splatTexture [[ texture(0)  ]],
@@ -57,7 +56,7 @@ fragment half4 NBodyLightingFragment(FragColor        inColor      [[ stage_in  
     half  a = fragColor.w;
     
     return fragColor * mix(x, y, a);
-} // NBodyLightingFragment
+}
 
 
 
@@ -99,9 +98,9 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
                                  
                                  threadgroup float4* pos_s [[ threadgroup(0) ]], // Буфферные данные на отдельную тредгруппу
                                  
-                                 const ushort positionInAllGrid [[ thread_position_in_grid ]],
-                                 const ushort localPosInGroup [[ thread_position_in_threadgroup ]],
-                                 const ushort threadsCountOnGroup [[ threads_per_threadgroup ]])
+                                 const ushort positionInAllGrid [[ thread_position_in_grid ]],      // Позиция во всей сетке
+                                 const ushort localPosInGroup [[ thread_position_in_threadgroup ]], // Позиция потока в тредгруппе
+                                 const ushort threadsCountOnGroup [[ threads_per_threadgroup ]])    // Количество потоков в группе
 {
 
     // Общее количество партиклов
@@ -115,36 +114,24 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     // Переменная для ускорения
     float3 acc = 0.0f;
     
-    // Обходим все точки с шагом размером равным количеству потоков в тредгруппу
-    // Потоки в тредгруппе выполняются параллельно и синхронно???
-    /*
-     ushort tile = 0;
-     ushort k = localPosInGroup;
-     for(ushort i = 0; i < particles; (i += threadsCountOnGroup, ++tile)){
-        // TODO: ???
-        pos_s[localPosInGroup] = pos_0[k];
+    // Обходим все точки с шагом размером равным количеству потоков на тредгруппу
+    // Потоки в тредгруппе выполняются параллельно и синхронно,
+    // так как выставлено количество потоков на группу, равное размеру SIMD
+    for(ushort i = 0; i < particles; i += threadsCountOnGroup){
+        // Обновляем значение позиции конкретной точки
+        pos_s[localPosInGroup] = pos_0[i + localPosInGroup];
         
-        ushort j = 0;
-        while(j < threadsCountOnGroup) {
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
-            acc += NBodyComputeForce(pos_s[j++], oldPos, softeningSqr);
+        for(ushort j = 0; j < threadsCountOnGroup; j++){
+            acc += NBodyComputeForce(pos_s[j], oldPos, softeningSqr);
         }
-        
-        k += threadsCountOnGroup;
-    }*/
+    }
     // Вычисляем взаимодействие со всеми остальными частицами
-    for(ushort i = 0; i < particles; i++){
+    /*for(ushort i = 0; i < particles; i++){
         if(positionInAllGrid != i){
             float4 testPos = pos_0[i];
             acc += NBodyComputeForce(testPos, oldPos, softeningSqr);
         }
-    }
+    }*/
     
     // Получаем старое ускорение данной точки
     float4 oldVel = vel_0[positionInAllGrid];

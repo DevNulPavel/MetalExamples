@@ -14,9 +14,6 @@
 // Query to determine if a Metal buffer was generated successfully
 @property (readonly) BOOL haveBuffer;
 
-// Generate a Metal buffer and linear tranformations using a default system device
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
-
 // Metal buffer for linear transformation matrix
 @property (nullable, readonly) id<MTLBuffer> buffer;
 
@@ -26,20 +23,23 @@
 // Metal buffer size
 @property (readonly) size_t size;
 
-// Update the mvp linear transformation matrix
-@property (nonatomic) BOOL update;
-
-// Set the aspect ratio for the orthographic 2d projection
-@property (nonatomic) float aspect;
-
-// Orthographic projection configuration type
-@property (nonatomic) uint32_t config;
-
 // Orthographic 2d bounds
 @property simd::float3 bounds;
 
 // (x,y,z) centers
 @property float center;
 @property float zCenter;
+
+// Обновляем финальную матрицу трансформации
+- (void)setUpdate:(BOOL)update;
+
+// Обновление переменной соотношения сторон
+- (void)setAspect:(float)aspect;
+
+// Выполняем инициализацию для конкретногго устройства
+- (void)prepareForDevice:(nullable id<MTLDevice>)device;
+
+// Обновление конфигурации размера ортографической проекции
+- (void)setConfig:(uint32_t)config;
 
 @end
