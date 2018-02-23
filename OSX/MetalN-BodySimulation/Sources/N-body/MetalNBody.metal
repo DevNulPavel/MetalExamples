@@ -96,7 +96,7 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
                                  constant float4* const vel_0 [[ buffer(3) ]],  // Ускорения предыдущего кадра
                                  constant NBodyPrefs& prefs [[ buffer(4) ]],    // Настройки
                                  
-                                 threadgroup float4* pos_s [[ threadgroup(0) ]], // Буфферные данные на отдельную тредгруппу
+                                 threadgroup float4* threadgroupBufferData [[ threadgroup(0) ]], // Буфферные данные на отдельную тредгруппу, высокая скорость
                                  
                                  const ushort positionInAllGrid [[ thread_position_in_grid ]],      // Позиция во всей сетке
                                  const ushort localPosInGroup [[ thread_position_in_threadgroup ]], // Позиция потока в тредгруппе
@@ -118,11 +118,11 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     // Потоки в тредгруппе выполняются параллельно и синхронно,
     // так как выставлено количество потоков на группу, равное размеру SIMD
     for(ushort i = 0; i < particles; i += threadsCountOnGroup){
-        // Обновляем значение позиции конкретной точки
-        pos_s[localPosInGroup] = pos_0[i + localPosInGroup];
+        // Обновляем значение позиции конкретной точки в быстрой разделяемой памяти
+        threadgroupBufferData[localPosInGroup] = pos_0[i + localPosInGroup];
         
         for(ushort j = 0; j < threadsCountOnGroup; j++){
-            acc += NBodyComputeForce(pos_s[j], oldPos, softeningSqr);
+            acc += NBodyComputeForce(threadgroupBufferData[j], oldPos, softeningSqr);
         }
     }
     // Вычисляем взаимодействие со всеми остальными частицами
