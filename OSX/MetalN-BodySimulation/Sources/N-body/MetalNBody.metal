@@ -116,6 +116,7 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     float3 acc = 0.0f;
     
     // Обходим все точки с шагом размером равным количеству потоков в тредгруппу
+    // Потоки в тредгруппе выполняются параллельно и синхронно???
     /*
      ushort tile = 0;
      ushort k = localPosInGroup;
