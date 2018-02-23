@@ -7,7 +7,7 @@
 		<key>NBody_Channels</key>
 		<integer>4</integer>
 		<key>NBody_Particles</key>
-		<integer>8192</integer>
+		<integer>6144</integer>
 		<key>NBody_Tex_Res</key>
 		<integer>64</integer>
 	</dict>

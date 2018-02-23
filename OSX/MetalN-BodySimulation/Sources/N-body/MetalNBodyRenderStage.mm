@@ -196,7 +196,6 @@
         NSLog(@">> ERROR: Command buffer is nil!");
         return;
     }
-    
     if(!drawable){
         _isEncoded = false;
         NSLog(@">> ERROR: Drawable is nil!");
@@ -205,21 +204,22 @@
     
     mpDescriptor.drawable = drawable;
     
+    // Проверяем, есть ли текстура
     if(!mpDescriptor.haveTexture){
         _isEncoded = false;
         NSLog(@">> ERROR: Failed to acquire a texture from a CA drawable!");
         return;
     }
     
-    id<MTLRenderCommandEncoder> renderEncoder
-    = [_cmdBuffer renderCommandEncoderWithDescriptor:mpDescriptor.descriptor];
-    
+    // Создаем рендер энкодер для отрисовки
+    id<MTLRenderCommandEncoder> renderEncoder = [_cmdBuffer renderCommandEncoderWithDescriptor:mpDescriptor.descriptor];
     if(!renderEncoder){
         _isEncoded = false;
         NSLog(@">> ERROR: Failed to acquire a render command encoder!");
         return;
     }
     
+    // Устанавливаем пайплайн стейт для отрисовки
     [renderEncoder setRenderPipelineState:mpPipeline.render];
     
     mpVertex.positions  = _positions;
@@ -227,6 +227,7 @@
     
     mpFragment.cmdEncoder = renderEncoder;
     
+    // Вызываем отрисовку
     [renderEncoder drawPrimitives:MTLPrimitiveTypePoint
                       vertexStart:0
                       vertexCount:mnParticles

@@ -15,7 +15,7 @@
 
 namespace NBody {
     namespace Defaults {
-        static const uint32_t kParticles = 1024 * 8;
+        static const uint32_t kParticles = 1024 * 6;
         static const uint32_t kChannels  = 4;
         static const uint32_t kFrames    = 60 * 30; // 60 кадров в сек * количество секунд
         static const uint32_t kTexRes    = 64;

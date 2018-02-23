@@ -103,8 +103,6 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
                                  const ushort localPosInGroup [[ thread_position_in_threadgroup ]],
                                  const ushort threadsCountOnGroup [[ threads_per_threadgroup ]])
 {
-    ushort tile = 0;
-    ushort k = localPosInGroup;
 
     // Общее количество партиклов
     const ushort particles = prefs.particles;
@@ -118,7 +116,10 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     float3 acc = 0.0f;
     
     // Обходим все точки с шагом размером равным количеству потоков в тредгруппу
-    for(ushort i = 0; i < particles; (i += threadsCountOnGroup, ++tile)){
+    /*
+     ushort tile = 0;
+     ushort k = localPosInGroup;
+     for(ushort i = 0; i < particles; (i += threadsCountOnGroup, ++tile)){
         // TODO: ???
         pos_s[localPosInGroup] = pos_0[k];
         
@@ -135,6 +136,13 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
         }
         
         k += threadsCountOnGroup;
+    }*/
+    // Вычисляем взаимодействие со всеми остальными частицами
+    for(ushort i = 0; i < particles; i++){
+        if(positionInAllGrid != i){
+            float4 testPos = pos_0[i];
+            acc += NBodyComputeForce(testPos, oldPos, softeningSqr);
+        }
     }
     
     // Получаем старое ускорение данной точки
