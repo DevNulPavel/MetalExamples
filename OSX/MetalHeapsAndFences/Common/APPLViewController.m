@@ -18,6 +18,7 @@
 static const NSTimeInterval kTimeoutSeconds = 7.0;
 
 static const uint32_t kImageNamesCount = 6;
+
 static const NSString *imageNames[kImageNamesCount] = {
     @"Assets/one",
     @"Assets/two",
@@ -26,6 +27,47 @@ static const NSString *imageNames[kImageNamesCount] = {
     @"Assets/five",
     @"Assets/six"
 };
+
+#pragma mark - Utilities
+
+static NSUInteger max(NSUInteger x, NSUInteger y) {
+    return (x >= y) ? x : y;
+}
+
+static NSUInteger alignUp(NSUInteger size, NSUInteger align) {
+    // Make sure align is a power of 2
+    assert(((align-1) & align) == 0);
+    
+    const NSUInteger alignmentMask = align - 1;
+    return ((size + alignmentMask) & (~alignmentMask));
+}
+
+static MTLTextureDescriptor *getDescFromTexture(id <MTLTexture> texture) {
+    MTLTextureDescriptor *inTextureDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:texture.pixelFormat
+                                                                                             width:texture.width
+                                                                                            height:texture.height
+                                                                                         mipmapped:(texture.mipmapLevelCount > 0)];
+    return inTextureDesc;
+}
+
+static inline matrix_float4x4 matrix_from_translation(float x, float y, float z) {
+    matrix_float4x4 m = matrix_identity_float4x4;
+    m.columns[3] = (vector_float4) { x, y, z, 1.0 };
+    return m;
+}
+
+static inline matrix_float4x4 matrix_from_scale(const float x, const float y, const float z) {
+    matrix_float4x4 m = {
+        .columns[0] = { x, 0.0f, 0.0f, 0.0f },
+        .columns[1] = { 0.0f, y, 0.0f, 0.0f },
+        .columns[2] = { 0.0f, 0.0f, z, 0.0f },
+        .columns[3] = { 0.0f, 0.0f, 0.0f, 1.0f }
+    };
+    
+    return m;
+}
+
+#pragma mark - Controller
 
 @implementation APPLViewController {
     // Вьюшка
@@ -199,9 +241,10 @@ static const NSString *imageNames[kImageNamesCount] = {
 
 // Настройка кучи для текстуры
 - (void)setupHeap:(nonnull id <MTLTexture>)inTexture {
-    // Calculate the heap size
+    // Вычисление размеров кучи
     MTLTextureDescriptor* descriptor = getDescFromTexture(inTexture);
     
+    // Вычисляем размеры для кучи?
     MTLSizeAndAlign downsampleSizeAndAlignRequirement = [_downsample heapSizeAndAlignWithInputTextureDescriptor:descriptor];
     MTLSizeAndAlign gaussianBlurSizeAndAlignRequirement = [_gaussianBlur heapSizeAndAlignWithInputTextureDescriptor:descriptor];
     
@@ -219,17 +262,18 @@ static const NSString *imageNames[kImageNamesCount] = {
     }
 }
 
+// Выполнение фильтрации
 - (nonnull id <MTLTexture>)executeFilterGraph:(nonnull id <MTLTexture>)inTexture {
-    // Create a command buffer
+    // Создаем буффер комманд
     id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
     
-    // Perform the filters
+    // Выполняем фильтрацию
     id <MTLTexture> downsampledTexture = [_downsample executeWithCommandBuffer:commandBuffer
                                                                   inputTexture:inTexture
                                                                           heap:_heap
                                                                          fence:_fence];
-    
+    // Блюрим
     id <MTLTexture> blurredTexture = [_gaussianBlur executeWithCommandBuffer:commandBuffer
                                                                 inputTexture:downsampledTexture
                                                                         heap:_heap
@@ -240,76 +284,18 @@ static const NSString *imageNames[kImageNamesCount] = {
     return blurredTexture;
 }
 
-- (void)render {
-    NSTimeInterval currentTime = [_start timeIntervalSinceNow];
-    NSTimeInterval elapsedTime = _previousTime - currentTime;
-    float blurryness = elapsedTime / kTimeoutSeconds;
+- (void)reshape {
+    float scaledWidth = (float)_displayTexture.width * _scale / (float)self.view.bounds.size.width;
+    float scaledHeight = (float)_displayTexture.height * _scale / (float)self.view.bounds.size.height;
+    float xTranslation = ((_screenPosition.x - (scaledWidth / 2.0)) * 2.0 - 1.0) / scaledWidth / 10.0;
+    float yTranslation = ((_screenPosition.y - (scaledHeight / 2.0)) * 2.0 - 1.0) / scaledHeight / 10.0;
     
-    if(!_displayTexture || elapsedTime >= kTimeoutSeconds) {
-        _previousTime = currentTime;
-        
-        // Release our display texture from the heap
-        [_displayTexture makeAliasable];
-        _displayTexture = nil;
-  
-        // Select an image at random
-        NSUInteger r = arc4random_uniform(kImageNamesCount - 1);
-        id<MTLTexture> inTexture = _imageTextures[r].texture;
-        
-        [self setupHeap:inTexture];
-        _displayTexture = [self executeFilterGraph:inTexture];
-        
-        [self reposition];
-    }
+    _mvp = matrix_multiply(matrix_from_scale(scaledWidth, scaledHeight, 1.0), matrix_from_translation(xTranslation, yTranslation, 0.0));
+}
 
-    // Create a new command buffer for each renderpass to the current drawable
-    id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-    commandBuffer.label = @"MyCommand";
-    
-    // Obtain a renderPassDescriptor generated from the view's drawable textures
-    MTLRenderPassDescriptor* renderPassDescriptor = _view.currentRenderPassDescriptor;
-    
-    if(renderPassDescriptor != nil) {// If we have a valid drawable, begin the commands to render into it
-        // Create a render command encoder so we can render into something
-        id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        renderEncoder.label = @"MyRenderEncoder";
-        
-        // We need to wait for compute to finish before we can start our fragment stage
-        [renderEncoder waitForFence:_fence
-                       beforeStages:MTLRenderStageFragment];
-        
-        [renderEncoder setDepthStencilState:_depthState];
-        
-        // Set context state
-        [renderEncoder pushDebugGroup:@"DrawQuad"];
-        [renderEncoder setRenderPipelineState:_pipelineState];
-        [renderEncoder setVertexBuffer:_planeMesh.vertexBuffers[0].buffer offset:_planeMesh.vertexBuffers[0].offset atIndex:0 ];
-        [renderEncoder setVertexBytes:&_mvp length:sizeof(_mvp) atIndex:1 ];
-        
-        [renderEncoder setFragmentTexture:_displayTexture
-                                  atIndex:0];
-        
-        float lod = blurryness * _displayTexture.mipmapLevelCount;
-        [renderEncoder setFragmentBytes:&lod
-                                 length:sizeof(float)
-                                atIndex:0];
-        
-        MTKSubmesh* submesh = _planeMesh.submeshes[0];
-        // Tell the render context we want to draw our primitives
-        [renderEncoder drawIndexedPrimitives:submesh.primitiveType indexCount:submesh.indexCount indexType:submesh.indexType indexBuffer:submesh.indexBuffer.buffer indexBufferOffset:submesh.indexBuffer.offset];
-        
-        [renderEncoder updateFence:_fence
-                       afterStages:MTLRenderStageFragment];
-        
-        // We're done encoding commands
-        [renderEncoder endEncoding];
-        
-        // Schedule a present once the framebuffer is complete using the current drawable
-        [commandBuffer presentDrawable:_view.currentDrawable];
-    }
-
-    // Finalize rendering here & push the command buffer to the GPU
-    [commandBuffer commit];
+// Вызывается при смене ориентации или выравнивания
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
+    [self reshape];
 }
 
 - (void)reposition {
@@ -320,64 +306,100 @@ static const NSString *imageNames[kImageNamesCount] = {
     [self reshape];
 }
 
-- (void)reshape {
-    float scaledWidth = (float)_displayTexture.width * _scale / (float)self.view.bounds.size.width;
-    float scaledHeight = (float)_displayTexture.height * _scale / (float)self.view.bounds.size.height;
-    float xTranslation = ((_screenPosition.x - (scaledWidth / 2.0)) * 2.0 - 1.0) / scaledWidth / 10.0;
-    float yTranslation = ((_screenPosition.y - (scaledHeight / 2.0)) * 2.0 - 1.0) / scaledHeight / 10.0;
+- (void)render {
+    NSTimeInterval currentTime = [_start timeIntervalSinceNow];
+    NSTimeInterval elapsedTime = _previousTime - currentTime;
+    float blurryness = elapsedTime / kTimeoutSeconds;
+    
+    if(!_displayTexture || (elapsedTime >= kTimeoutSeconds)) {
+        _previousTime = currentTime;
+        
+        // Освобождаем текущую текстуру из кучи
+        [_displayTexture makeAliasable];
+        _displayTexture = nil;
+  
+        // Выбираем рандомную текстуру
+        NSUInteger r = arc4random_uniform(kImageNamesCount - 1);
+        id<MTLTexture> inTexture = _imageTextures[r].texture;
+        
+        // Настраиваем кучу на текстуру
+        [self setupHeap:inTexture];
+        _displayTexture = [self executeFilterGraph:inTexture];
+        
+        [self reposition];
+    }
 
-    _mvp = matrix_multiply(matrix_from_scale(scaledWidth, scaledHeight, 1.0), matrix_from_translation(xTranslation, yTranslation, 0.0));
+    // Создаем новый коммандный буффер
+    id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    commandBuffer.label = @"MyCommand";
+    
+    // Получаем дескриптор отрисовки из вьюшки
+    MTLRenderPassDescriptor* renderPassDescriptor = _view.currentRenderPassDescriptor;
+    
+    if(renderPassDescriptor != nil) {
+        // Создание энкодера для отрисовки
+        id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+        renderEncoder.label = @"MyRenderEncoder";
+        
+        // Ожидаем вычислительную часть до того, как мы будем рендерить, ожидание до фрагментного шейдера
+        [renderEncoder waitForFence:_fence
+                       beforeStages:MTLRenderStageFragment];
+        
+        // Устанавливаем настроку работу буффера глубины
+        [renderEncoder setDepthStencilState:_depthState];
+        
+        // Установка состояния контекста
+        [renderEncoder pushDebugGroup:@"DrawQuad"];
+        [renderEncoder setRenderPipelineState:_pipelineState];
+        // Установка вершинный буфферов с описанием вершин
+        [renderEncoder setVertexBuffer:_planeMesh.vertexBuffers[0].buffer
+                                offset:_planeMesh.vertexBuffers[0].offset
+                               atIndex:0];
+        
+        // Юниформы вершинного шейдера
+        [renderEncoder setVertexBytes:&_mvp
+                               length:sizeof(_mvp)
+                              atIndex:1];
+        
+        // Установка текстуры отрисовки
+        [renderEncoder setFragmentTexture:_displayTexture
+                                  atIndex:0];
+        
+        // Установка юниформов фрагментного шейдера
+        float lod = blurryness * _displayTexture.mipmapLevelCount;
+        [renderEncoder setFragmentBytes:&lod
+                                 length:sizeof(float)
+                                atIndex:0];
+        
+        MTKSubmesh* submesh = _planeMesh.submeshes[0];
+        
+        // Говорим рендеру отрисовать наши примитивы
+        [renderEncoder drawIndexedPrimitives:submesh.primitiveType
+                                  indexCount:submesh.indexCount
+                                   indexType:submesh.indexType
+                                 indexBuffer:submesh.indexBuffer.buffer
+                           indexBufferOffset:submesh.indexBuffer.offset];
+        
+        // Отправляем сообщение синхронизации после фрагментного шейдера
+        [renderEncoder updateFence:_fence
+                       afterStages:MTLRenderStageFragment];
+        
+        // Закачиваем кодирование
+        [renderEncoder endEncoding];
+        
+        // Ставим в очередь отображение буффера кадра
+        [commandBuffer presentDrawable:_view.currentDrawable];
+    }
+
+    // Коммитим очередь
+    [commandBuffer commit];
 }
 
-// Called whenever view changes orientation or layout is changed
-- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
-    [self reshape];
-}
-
-// Called whenever the view needs to render
+// Отрисовка
 - (void)drawInMTKView:(nonnull MTKView *)view {
     @autoreleasepool {
         [self render];
     }
-}
-
-#pragma mark Utilities
-
-static NSUInteger max(NSUInteger x, NSUInteger y) {
-    return (x >= y) ? x : y;
-}
-
-static NSUInteger alignUp(NSUInteger size, NSUInteger align) {
-    // Make sure align is a power of 2
-    assert(((align-1) & align) == 0);
-    
-    const NSUInteger alignmentMask = align - 1;
-    return ((size + alignmentMask) & (~alignmentMask));
-}
-
-static MTLTextureDescriptor *getDescFromTexture(id <MTLTexture> texture) {
-    MTLTextureDescriptor *inTextureDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:texture.pixelFormat
-                                                                                             width:texture.width
-                                                                                            height:texture.height
-                                                                                         mipmapped:(texture.mipmapLevelCount > 0)];
-    return inTextureDesc;
-}
-
-static inline matrix_float4x4 matrix_from_translation(float x, float y, float z) {
-    matrix_float4x4 m = matrix_identity_float4x4;
-    m.columns[3] = (vector_float4) { x, y, z, 1.0 };
-    return m;
-}
-
-static inline matrix_float4x4 matrix_from_scale(const float x, const float y, const float z) {
-    matrix_float4x4 m = {
-        .columns[0] = { x, 0.0f, 0.0f, 0.0f },
-        .columns[1] = { 0.0f, y, 0.0f, 0.0f },
-        .columns[2] = { 0.0f, 0.0f, z, 0.0f },
-        .columns[3] = { 0.0f, 0.0f, 0.0f, 1.0f }
-    };
-    
-    return m;
 }
 
 @end

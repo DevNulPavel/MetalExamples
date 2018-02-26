@@ -1,14 +1,9 @@
-/*
- Copyright (C) 2016 Apple Inc. All Rights Reserved.
- See LICENSE.txt for this sample’s licensing information
-
- */
-
 #import "APPLFilter.h"
 
 static const NSUInteger kThreadgroupWidth  = 16;
 static const NSUInteger kThreadgroupHeight = 16;
 static const NSUInteger kThreadgroupDepth  = 1;
+
 
 @implementation APPLDownsampleFilter {
 @private
@@ -18,19 +13,18 @@ static const NSUInteger kThreadgroupDepth  = 1;
 
 - (instancetype) initWithDevice:(nonnull id <MTLDevice>)device {
     self = [super init];
-    
     _device = device;
-    
     return self;
 }
 
 - (MTLSizeAndAlign) heapSizeAndAlignWithInputTextureDescriptor:(nonnull MTLTextureDescriptor *)inDescriptor {
+    // Создаем дескриптор текстуры
     _textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:inDescriptor.pixelFormat
-                                                               width:inDescriptor.width
-                                                              height:inDescriptor.height
-                                                           mipmapped:YES];
+                                                                            width:inDescriptor.width
+                                                                           height:inDescriptor.height
+                                                                        mipmapped:YES];
 
-    // Heap resources must share the same storage mode as the heap.
+    // Ресурсы в куче должны иметь один и тот же режима расшаривания
     _textureDescriptor.storageMode = MTLStorageModePrivate;
     _textureDescriptor.usage |= MTLTextureUsageShaderWrite;
     
@@ -42,14 +36,18 @@ static const NSUInteger kThreadgroupDepth  = 1;
                                           inputTexture:(_Nonnull id <MTLTexture>)inTexture
                                                   heap:(_Nonnull id <MTLHeap>)heap
                                                  fence:(_Nonnull id <MTLFence>)fence {
+    
+    // Создаем выходную текстуру
     id <MTLTexture> outTexture = [heap newTextureWithDescriptor:_textureDescriptor];
     assert(outTexture && "Failed to allocate on heap, did not request enough resources");
     
+    // Создаем энкодер комманд
     id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
-    
     if(blitCommandEncoder) {
+        // Ожидаем возможности исполнить копировать текстуру
         [blitCommandEncoder waitForFence:fence];
         
+        // Закидываем в очередь операцию по копированию текстуры
         [blitCommandEncoder copyFromTexture:inTexture
                                 sourceSlice:0
                                 sourceLevel:0
@@ -60,17 +58,21 @@ static const NSUInteger kThreadgroupDepth  = 1;
                            destinationLevel:0
                           destinationOrigin:(MTLOrigin){ 0, 0, 0}];
         
+        // Выполняем операцию генерации мипмапы
         [blitCommandEncoder generateMipmapsForTexture:outTexture];
         
+        // Отправляем сообщение о возможности следующего шага
         [blitCommandEncoder updateFence:fence];
         
+        // Заканчиваем кодирование
         [blitCommandEncoder endEncoding];
     }
     
     return outTexture;
 }
-
 @end
+
+
 
 @implementation APPLGaussianBlurFilter {
 @private
@@ -87,43 +89,38 @@ typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
 };
 
 - (instancetype) initWithDevice:(nonnull id <MTLDevice>)device {
-    NSError *error;
+    NSError* error = nil;
     
     self = [super init];
 
-    // Create a library for our filter.
+    // Создание библиотеки
     _library = [device newDefaultLibrary];
-    
     if(!_library) {
         NSLog(@"Failed creating a new library: %@", error);
     }
     
-    // Create a compute kernel function.
+    // Создаем вычислительное ядро гауса для горизонтальной обработки
     id <MTLFunction> function = [_library newFunctionWithName:@"gaussianblurHorizontal"];
-    
     if(!function) {
         NSLog(@"Failed creating a new function");
     }
     
-    // Create a compute kernel.
+    // Создаем горизонтальную функцию
     _horizontalKernel = [device newComputePipelineStateWithFunction:function
                                                               error:&error];
-    
     if(!_horizontalKernel) {
         NSLog(@"Failed creating a compute kernel: %@", error);
     }
     
-    // Create a compute kernel function.
+    // Получаем вычислительное ядро вертикальной обработки
     function = [_library newFunctionWithName:@"gaussianblurVertical"];
-    
     if(!function) {
         NSLog(@"Failed creating a new function");
     }
     
-    // Create a compute kernel.
+    // Создаем вертикальную функцию
     _verticalKernel = [device newComputePipelineStateWithFunction:function
                                                             error:&error];
-    
     if(!_verticalKernel) {
         NSLog(@"Failed creating a compute kernel: %@", error);
     }
@@ -134,13 +131,13 @@ typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
 }
 
 - (MTLSizeAndAlign) heapSizeAndAlignWithInputTextureDescriptor:(nonnull MTLTextureDescriptor *)inDescriptor {
+    // Создаем дескриптор текстуры меньшего в 2 раза размер
     MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
                                                                                     width:(inDescriptor.width >> 1)
                                                                                    height:(inDescriptor.height >> 1)
                                                                                 mipmapped:NO];
     // Usage
     textureDescriptor.usage |= MTLTextureUsageShaderWrite;
-    
     return [_device heapTextureSizeAndAlignWithDescriptor:textureDescriptor];
 }
 

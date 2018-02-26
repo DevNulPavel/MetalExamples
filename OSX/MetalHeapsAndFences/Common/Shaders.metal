@@ -22,6 +22,7 @@ typedef struct {
     float2 texCoord [[user(texturecoord)]];
 } VertexInOut;
 
+
 // Vertex shader function
 vertex VertexInOut texturedQuadVertex(vertex_t vertexArray      [[stage_in]],
                                   constant matrix_float4x4 &mvp [[buffer(1)]]) {
@@ -35,10 +36,12 @@ vertex VertexInOut texturedQuadVertex(vertex_t vertexArray      [[stage_in]],
 }
 
 // Fragment shader function
-fragment half4 texturedQuadFragment(VertexInOut in          [[stage_in]],
-                                 texture2d<half> tex2D      [[texture(0)]],
-                                 constant float &mipmapBias [[buffer(0)]]) {
-    constexpr sampler quadSampler(min_filter::linear, mag_filter::linear, mip_filter::linear, s_address::clamp_to_edge, t_address::clamp_to_edge, r_address::clamp_to_edge);
+fragment half4 texturedQuadFragment(VertexInOut in [[stage_in]],
+                                    texture2d<half> tex2D [[texture(0)]],
+                                    constant float& mipmapBias [[buffer(0)]]) {
+    
+    constexpr sampler quadSampler(min_filter::linear, mag_filter::linear, mip_filter::linear,
+                                  s_address::clamp_to_edge, t_address::clamp_to_edge, r_address::clamp_to_edge);
     half4 color = tex2D.sample(quadSampler, in.texCoord, level(mipmapBias));
     return color;
 }
