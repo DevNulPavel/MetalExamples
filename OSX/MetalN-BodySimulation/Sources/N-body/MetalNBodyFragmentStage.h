@@ -13,9 +13,6 @@
 // Query to determine if all the resource were instantiated.
 @property (readonly) BOOL isStaged;
 
-// N-body simulation global parameters
-@property (nullable, nonatomic) NSDictionary* globals;
-
 // Fragment function name
 @property (nullable) NSString* name;
 
@@ -25,10 +22,14 @@
 // Fragment stage function
 @property (nullable, readonly) id<MTLFunction> function;
 
-// Generate all the necessary fragment stage resources using a default system device
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
 
-// Encode texture and sampler for the fragment stage
-@property (nullable, nonatomic, setter=encode:) id<MTLRenderCommandEncoder> cmdEncoder;
+// Установка глобальных настроек
+- (void)setGlobals:(nonnull NSDictionary *)globals;
+
+// Инициализация для девайса
+- (void)initForDevice:(nullable id<MTLDevice>)device;
+
+// Обновляем буфферы в энкодере
+- (void)updateBuffersInsideEncoder:(nullable id<MTLRenderCommandEncoder>)cmdEncoder;
 
 @end

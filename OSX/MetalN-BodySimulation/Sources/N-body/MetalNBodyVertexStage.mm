@@ -25,7 +25,7 @@
     id<MTLFunction>  _function;
     id<MTLBuffer>    _positions;
     
-    id<MTLBuffer>  _сolorsBuffer;
+    id<MTLBuffer>  _colorsBuffer;
     id<MTLBuffer>  _pointSizeBuffer;
     
     uint32_t mnParticles;
@@ -51,7 +51,7 @@
         mnPointSz   = NBody::Defaults::kPointSz;
         mnParticles = NBody::Defaults::kParticles;
         
-        _сolorsBuffer  = nil;
+        _colorsBuffer  = nil;
         _pointSizeBuffer = nil;
         
         mpTransform = nil;
@@ -107,13 +107,13 @@
             return NO;
         }
         
-        _сolorsBuffer = [device newBufferWithLength:sizeof(simd::float4)*mnParticles options:0];
-        if(!_сolorsBuffer){
+        _colorsBuffer = [device newBufferWithLength:sizeof(simd::float4)*mnParticles options:0];
+        if(!_colorsBuffer){
             NSLog(@">> ERROR: Failed to instantiate a new m_Colors buffer!");
             return NO;
         }
         
-        _colorsDataPtr = static_cast<simd::float4 *>([_сolorsBuffer contents]);
+        _colorsDataPtr = static_cast<simd::float4 *>([_colorsBuffer contents]);
         if(!_colorsDataPtr){
             NSLog(@">> ERROR: Failed to acquire a host pointer for m_Colors buffer!");
             return NO;
@@ -164,7 +164,7 @@
 - (void)updateBuffersInsideEncoder:(nullable id<MTLRenderCommandEncoder>)cmdEncoder{
     if(_positions){
         [cmdEncoder setVertexBuffer:_positions         offset:0 atIndex:0];
-        [cmdEncoder setVertexBuffer:_сolorsBuffer           offset:0 atIndex:1];
+        [cmdEncoder setVertexBuffer:_colorsBuffer           offset:0 atIndex:1];
         [cmdEncoder setVertexBuffer:mpTransform.buffer offset:0 atIndex:2];
         [cmdEncoder setVertexBuffer:_pointSizeBuffer          offset:0 atIndex:3];
     }

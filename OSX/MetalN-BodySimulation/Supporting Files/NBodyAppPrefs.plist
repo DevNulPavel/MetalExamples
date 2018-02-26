@@ -9,7 +9,7 @@
 		<key>NBody_Particles</key>
 		<integer>16384</integer>
 		<key>NBody_Tex_Res</key>
-		<integer>64</integer>
+		<integer>32</integer>
 	</dict>
 	<key>NBody_Parameters</key>
 	<array>

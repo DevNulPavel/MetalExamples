@@ -28,10 +28,8 @@
 
 // Разрешение текстуры
 - (void)setTexRes:(uint32_t)texRes;
-
 // Количество каналов
 - (void)setChannels:(uint32_t)channels;
-
 // Инициализация
 - (void)initWithDevice:(nullable id<MTLDevice>)device;
 

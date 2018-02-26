@@ -10,13 +10,12 @@
 
 @interface MetalNBodySampler : NSObject
 
-// Generate a Metal sampler state using a default system device
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
-
 // Sample state object for N-body simulation
 @property (nullable, readonly) id<MTLSamplerState> sampler;
 
 // Query to find if the sampler state object was generated
 @property (readonly) BOOL haveSampler;
+
+- (void)initForDevice:(nullable id<MTLDevice>)device;
 
 @end

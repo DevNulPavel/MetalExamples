@@ -15,143 +15,115 @@
 
 #import "MetalNBodyFragmentStage.h"
 
-@implementation MetalNBodyFragmentStage
-{
+@implementation MetalNBodyFragmentStage {
 @private
     BOOL _isStaged;
     
-    NSString*     _name;
+    NSString* _name;
     NSDictionary* _globals;
     
     id<MTLFunction>  _function;
     
-    uint32_t mnParticles;
-    uint32_t mnChannels;
-    uint32_t mnTexRes;
+    uint32_t _particlesCount;
+    uint32_t _textureColorChannels;
+    uint32_t _textureResolution;
 
-    MetalGaussianMap*   mpGaussian;
-    MetalNBodySampler*  mpSampler;
+    MetalGaussianMap* _gaussian;
+    MetalNBodySampler* _sampler;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
-        _name     = nil;
+    if(self) {
+        _name = nil;
         _globals  = nil;
         _function = nil;
         
         _isStaged = NO;
         
-        mnParticles = NBody::Defaults::kParticles;
-        mnTexRes    = NBody::Defaults::kTexRes;
-        mnChannels  = NBody::Defaults::kChannels;
+        _particlesCount = NBody::Defaults::kParticles;
+        _textureResolution = NBody::Defaults::kTexRes;
+        _textureColorChannels  = NBody::Defaults::kChannels;
 
-        mpGaussian = nil;
-        mpSampler  = nil;
-    } // if
+        _gaussian = nil;
+        _sampler  = nil;
+    }
     
     return self;
-} // init
+}
 
-// N-body simulation global parameters
-- (void) setGlobals:(NSDictionary *)globals
-{
-    if(globals && !_isStaged)
-    {
+// Установка глобальных настроек
+- (void)setGlobals:(NSDictionary *)globals {
+    if(globals && !_isStaged){
         _globals = globals;
         
-        mnParticles = [_globals[kNBodyParticles] unsignedIntValue];
-        mnTexRes    = [_globals[kNBodyTexRes]    unsignedIntValue];
-        mnChannels  = [_globals[kNBodyChannels]  unsignedIntValue];
-    } // if
-} // setParameters
+        _particlesCount = [_globals[kNBodyParticles] unsignedIntValue];
+        _textureResolution    = [_globals[kNBodyTexRes]    unsignedIntValue];
+        _textureColorChannels  = [_globals[kNBodyChannels]  unsignedIntValue];
+    }
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        if(!_library)
-        {
+- (BOOL)acquire:(nullable id<MTLDevice>)device{
+    if(device){
+        if(!_library){
             NSLog(@">> ERROR: Metal library is nil!");
-            
             return NO;
-        } // if
+        }
         
         _function = [_library newFunctionWithName:(_name) ? _name : @"NBodyLightingFragment"];
-        
-        if(!_function)
-        {
+        if(!_function){
             NSLog(@">> ERROR: Failed to instantiate fragment function!");
-            
             return NO;
-        } // if
+        }
         
-        mpSampler = [MetalNBodySampler new];
-        
-        if(!mpSampler)
-        {
+        _sampler = [MetalNBodySampler new];
+        if(!_sampler){
             NSLog(@">> ERROR: Failed to instantiate a N-Body sampler object!");
-            
             return NO;
-        } // if
+        }
         
-        mpSampler.device = device;
-        
-        if(!mpSampler.haveSampler)
-        {
+        [_sampler initForDevice:device];
+        if(!_sampler.haveSampler){
             NSLog(@">> ERROR: Failed to acquire a N-Body sampler resources!");
-            
             return NO;
-        } // if
+        }
         
-        mpGaussian = [MetalGaussianMap new];
-        
-        if(!mpGaussian)
-        {
+        _gaussian = [MetalGaussianMap new];
+        if(!_gaussian){
             NSLog(@">> ERROR: Failed to instantiate a N-Body Gaussian texture object!");
-            
             return NO;
-        } // if
+        }
         
-        [mpGaussian setChannels:mnChannels];
-        [mpGaussian setTexRes:mnTexRes];
-        [mpGaussian initWithDevice:device];
+        [_gaussian setChannels:_textureColorChannels];
+        [_gaussian setTexRes:_textureResolution];
+        [_gaussian initWithDevice:device];
         
-        if(!mpGaussian.haveTexture)
-        {
+        if(!_gaussian.haveTexture){
             NSLog(@">> ERROR: Failed to acquire a N-Body Gaussian texture resources!");
-            
             return NO;
-        } // if
+        }
 
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // _acquire
+}
 
-// Generate all the necessary fragment stage resources using a default system device
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_isStaged)
-    {
-        _isStaged = [self _acquire:device];
-    } // if
-} // if
+// Инициализация для девайса
+- (void)initForDevice:(nullable id<MTLDevice>)device{
+    if(!_isStaged){
+        _isStaged = [self acquire:device];
+    }
+}
 
-// Encode texture and sampler for the fragment stage
-- (void) encode:(nullable id<MTLRenderCommandEncoder>)cmdEncoder
-{
-    [cmdEncoder setFragmentTexture:mpGaussian.texture     atIndex:0];
-    [cmdEncoder setFragmentSamplerState:mpSampler.sampler atIndex:0];
-} // encode
+// Обновляем буфферы в энкодере
+- (void)updateBuffersInsideEncoder:(nullable id<MTLRenderCommandEncoder>)cmdEncoder {
+    [cmdEncoder setFragmentTexture:_gaussian.texture atIndex:0];
+    [cmdEncoder setFragmentSamplerState:_sampler.sampler atIndex:0];
+}
 
 @end
 

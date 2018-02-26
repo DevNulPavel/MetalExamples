@@ -8,76 +8,62 @@
 
 #import "MetalNBodySampler.h"
 
-@implementation MetalNBodySampler
-{
+@implementation MetalNBodySampler {
 @private
     BOOL _haveSampler;
-    
     id<MTLSamplerState>  _sampler;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
-    
-    if(self)
-    {
+    if(self){
         _haveSampler = NO;
         _sampler     = nil;
-    } // if
-    
+    }
     return self;
-} // init
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
+- (BOOL)acquire:(nullable id<MTLDevice>)device {
+    if(device){
+        
+        // Создаем дескриптор
         MTLSamplerDescriptor* pDescriptor = [MTLSamplerDescriptor new];
-        
-        if(!pDescriptor)
-        {
+        if(!pDescriptor){
             NSLog(@">> ERROR: Failed to instantiate sampler descriptor!");
-            
             return NO;
-        } // if
+        }
         
+        // Настройки
         pDescriptor.minFilter             = MTLSamplerMinMagFilterLinear;
         pDescriptor.magFilter             = MTLSamplerMinMagFilterLinear;
-        pDescriptor.sAddressMode          = MTLSamplerAddressModeRepeat;
-        pDescriptor.tAddressMode          = MTLSamplerAddressModeRepeat;
+        pDescriptor.sAddressMode          = MTLSamplerAddressModeClampToEdge;
+        pDescriptor.tAddressMode          = MTLSamplerAddressModeClampToEdge;
         pDescriptor.mipFilter             = MTLSamplerMipFilterNotMipmapped;
         pDescriptor.maxAnisotropy         = 1U;
         pDescriptor.normalizedCoordinates = YES;
         pDescriptor.lodMinClamp           = 0.0;
         pDescriptor.lodMaxClamp           = 255.0;
         
+        // Создаем семплер
         _sampler = [device newSamplerStateWithDescriptor:pDescriptor];
-        
-        if(!_sampler)
-        {
+        if(!_sampler){
             NSLog(@">> ERROR: Failed to instantiate sampler state with descriptor!");
-            
             return NO;
-        } // else
+        }
         
         return YES;
-    } // else
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
 
     return NO;
-} // _acquire
+}
 
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveSampler)
-    {
-        _haveSampler = [self _acquire:device];
-    } // if
-} // acquire
+- (void)initForDevice:(nullable id<MTLDevice>)device{
+    if(!_haveSampler){
+        _haveSampler = [self acquire:device];
+    }
+}
 
 @end
 

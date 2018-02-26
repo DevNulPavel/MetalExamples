@@ -142,9 +142,9 @@
             return NO;
         }
         
-        mpFragment.globals = _globals;
-        mpFragment.library = _library;
-        mpFragment.device  = device;
+        [mpFragment setGlobals:_globals];
+        [mpFragment setLibrary:_library];
+        [mpFragment initForDevice:device];
        
         if(!mpFragment.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body fragment stage resources!");
@@ -228,7 +228,7 @@
     [mpVertex updateBuffersInsideEncoder:renderEncoder];
     
     // Обновляем буфферы фрагментного шейдера
-    mpFragment.cmdEncoder = renderEncoder;
+    [mpFragment updateBuffersInsideEncoder:renderEncoder];
     
     // Вызываем отрисовку
     [renderEncoder drawPrimitives:MTLPrimitiveTypePoint
