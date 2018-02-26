@@ -109,7 +109,7 @@
 - (nullable simd::float4 *)getColorsPtr {
     simd::float4* pColors = nullptr;
     if(mpVertex) {
-        pColors = mpVertex.colors;
+        pColors = mpVertex.colorsDataPtr;
     }
     return pColors;
 }
@@ -127,9 +127,9 @@
             return NO;
         }
         
-        mpVertex.particles = mnParticles;
-        mpVertex.library   = _library;
-        mpVertex.device    = device;
+        [mpVertex setParticles:mnParticles];
+        [mpVertex setLibrary:_library];
+        [mpVertex initWithDevice:device];
         
         if(!mpVertex.isStaged){
             NSLog(@">> ERROR: Failed to acquire a N-Body vertex stage resources!");
@@ -223,8 +223,11 @@
     [renderEncoder setRenderPipelineState:mpPipeline.render];
     
     mpVertex.positions  = _positions;
-    mpVertex.cmdEncoder = renderEncoder;
     
+    // Обновляем буфферы вершинного шейдера
+    [mpVertex updateBuffersInsideEncoder:renderEncoder];
+    
+    // Обновляем буфферы фрагментного шейдера
     mpFragment.cmdEncoder = renderEncoder;
     
     // Вызываем отрисовку

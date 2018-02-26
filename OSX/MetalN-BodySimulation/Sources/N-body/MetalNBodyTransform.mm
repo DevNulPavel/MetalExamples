@@ -46,11 +46,10 @@ static const simd::float3 kOrth2DBounds[6] =
     simd::float4x4 _transform;
     simd::float3   _bounds;
     
-    simd::float4x4* mpTransform;
+    simd::float4x4* _transformPtr;
 
-    simd::float4x4 m_View;
+    simd::float4x4 _viewMatrix;
     simd::float4x4 _ortiProjection;
-    simd::float4x4 m_Ortho2D;
 }
 
 - (instancetype) init {
@@ -73,12 +72,11 @@ static const simd::float3 kOrth2DBounds[6] =
         simd::float4x4 rotate2   = CM::rotate(0, 1.0f, 1.0f, 1.0f);
         simd::float4x4 translate = CM::translate(0, 0, 1000);
         
-        m_View = translate * rotate1 * rotate2;
+        _viewMatrix = translate * rotate1 * rotate2;
         
-        m_Ortho2D    = 0.0f;
         _ortiProjection = 0.0f;
         
-        mpTransform = nullptr;
+        _transformPtr = nullptr;
     }
     
     return self;
@@ -104,7 +102,7 @@ static const simd::float3 kOrth2DBounds[6] =
 // Обновляем финальную матрицу трансформации
 - (void)setUpdate:(BOOL)update {
     if(update) {
-        *mpTransform = _transform = _ortiProjection * m_View;
+        *_transformPtr = _transform = _ortiProjection * _viewMatrix;
         _update = update;
     }
 }
@@ -132,9 +130,9 @@ static const simd::float3 kOrth2DBounds[6] =
         }
         
         // Liner transformation mvp matrix
-        mpTransform = static_cast<simd::float4x4 *>([_buffer contents]);
+        _transformPtr = static_cast<simd::float4x4 *>([_buffer contents]);
         
-        if(!mpTransform){
+        if(!_transformPtr){
             NSLog(@">> ERROR: Failed to acquire a host pointer to the transformation matrix buffer!");
             return NO;
         }

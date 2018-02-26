@@ -15,21 +15,6 @@
 // Query to determine if all the resource were instantiated.
 @property (readonly) BOOL isStaged;
 
-// Update the linear transformation mvp matrix
-@property (nonatomic) BOOL update;
-
-// Number of point particles in the N-body simulation
-@property (nonatomic) uint32_t particles;
-
-// Orthographic projection configuration type
-@property (nonatomic) uint32_t config;
-
-// Aspect ratio
-@property (nonatomic) float aspect;
-
-// Point particle size
-@property (nonatomic) float pointSz;
-
 // Vertex function name
 @property (nullable) NSString* name;
 
@@ -43,12 +28,28 @@
 @property (nullable, readonly) id<MTLFunction>  function;
 
 // Point particle colors
-@property (nullable, readonly) simd::float4* colors;
+@property (nullable, readonly) simd::float4* colorsDataPtr;
 
-// Generate all the necessary vertex stage resources using a default system device
-@property (nullable, nonatomic, setter=acquire:) id<MTLDevice> device;
 
-// Encode the buffers for the vertex stage
-@property (nullable, nonatomic, setter=encode:) id<MTLRenderCommandEncoder> cmdEncoder;
+// Установка количества партиклов
+- (void)setParticles:(uint32_t)particles;
+
+// Установка размера точки
+- (void) setPointSz:(float)pointSz;
+
+// Соотношение точки
+- (void) setAspect:(float)aspect;
+
+// Конфигурация ортографической проекции
+- (void) setConfig:(uint32_t)config;
+
+// Установка необходимости обновить матрицу трансформации
+- (void) setUpdate:(BOOL)update;
+
+// Инициализация для конкретного девайся
+- (void)initWithDevice:(nullable id<MTLDevice>)device;
+
+// Обновляем буфферы в энкодере
+- (void)updateBuffersInsideEncoder:(nullable id<MTLRenderCommandEncoder>)cmdEncoder;
 
 @end

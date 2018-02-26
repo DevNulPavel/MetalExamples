@@ -14,201 +14,160 @@
 
 #import "MetalNBodyVertexStage.h"
 
-@implementation MetalNBodyVertexStage
-{
+@implementation MetalNBodyVertexStage {
 @private
     BOOL  _isStaged;
     
     NSString* _name;
     
-    simd::float4* _colors;
+    simd::float4* _colorsDataPtr;
     
     id<MTLFunction>  _function;
     id<MTLBuffer>    _positions;
     
-    id<MTLBuffer>  m_Colors;
-    id<MTLBuffer>  m_PointSz;
+    id<MTLBuffer>  _сolorsBuffer;
+    id<MTLBuffer>  _pointSizeBuffer;
     
     uint32_t mnParticles;
     
     float  mnPointSz;
-    float* mpPointSz;
+    float* _pointSizeDataPtr;
     
     MetalNBodyTransform*  mpTransform;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self) {
         _isStaged = NO;
 
         _name      = nil;
         _function  = nil;
         _positions = nil;
         
-        _colors = nullptr;
+        _colorsDataPtr = nullptr;
         
         mnPointSz   = NBody::Defaults::kPointSz;
         mnParticles = NBody::Defaults::kParticles;
         
-        m_Colors  = nil;
-        m_PointSz = nil;
+        _сolorsBuffer  = nil;
+        _pointSizeBuffer = nil;
         
         mpTransform = nil;
-        mpPointSz   = nullptr;
-    } // if
+        _pointSizeDataPtr   = nullptr;
+    }
     
     return self;
-} // init
+}
 
-// Number of point particles in the N-body simulation
-- (void) setParticles:(uint32_t)particles
-{
+// Установка количества партиклов
+- (void) setParticles:(uint32_t)particles {
     mnParticles = (particles) ? particles : NBody::Defaults::kParticles;
-} // setParticles
+}
 
-// Point particle size
-- (void) setPointSz:(float)pointSz
-{
-    if(mpPointSz != nullptr)
-    {
-        *mpPointSz = CM::isLT(pointSz, mnPointSz) ? mnPointSz : pointSz;
-    } // if
-} // setPointSz
+// Установка размера точки
+- (void) setPointSz:(float)pointSz {
+    if(_pointSizeDataPtr != nullptr){
+        *_pointSizeDataPtr = CM::isLT(pointSz, mnPointSz) ? mnPointSz : pointSz;
+    }
+}
 
-// Aspect ratio
-- (void) setAspect:(float)aspect
-{
-    if(mpTransform)
-    {
+// Соотношение сторон
+- (void) setAspect:(float)aspect {
+    if(mpTransform) {
         [mpTransform setAspect:aspect];
-    } // if
-} // setAspect
+    }
+}
 
-// Orthographic projection configuration type
-- (void) setConfig:(uint32_t)config
-{
-    if(mpTransform)
-    {
+// Конфигурация ортографической проекции
+- (void) setConfig:(uint32_t)config{
+    if(mpTransform) {
         mpTransform.config = config;
-    } // if
-} // setConfig
+    }
+}
 
-// Update the linear transformation mvp matrix
-- (void) setUpdate:(BOOL)update
-{
-    if(mpTransform)
-    {
+// Установка необходимости обновить матрицу трансформации
+- (void) setUpdate:(BOOL)update {
+    if(mpTransform){
         [mpTransform setUpdate:update];
-    } // if
-} // setUpdate
+    }
+}
 
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        if(!_library)
-        {
+- (BOOL)acquire:(nullable id<MTLDevice>)device{
+    if(device){
+        if(!_library){
             NSLog(@">> ERROR: Metal library is nil!");
-            
             return NO;
-        } // if
+        }
         
         _function = [_library newFunctionWithName:(_name) ? _name : @"NBodyLightingVertex"];
-        
-        if(!_function)
-        {
+        if(!_function){
             NSLog(@">> ERROR: Failed to instantiate vertex function!");
-            
             return NO;
-        } // if
+        }
         
-        m_Colors = [device newBufferWithLength:sizeof(simd::float4)*mnParticles options:0];
-        
-        if(!m_Colors)
-        {
+        _сolorsBuffer = [device newBufferWithLength:sizeof(simd::float4)*mnParticles options:0];
+        if(!_сolorsBuffer){
             NSLog(@">> ERROR: Failed to instantiate a new m_Colors buffer!");
-            
             return NO;
-        } // if
+        }
         
-        _colors = static_cast<simd::float4 *>([m_Colors contents]);
-        
-        if(!_colors)
-        {
+        _colorsDataPtr = static_cast<simd::float4 *>([_сolorsBuffer contents]);
+        if(!_colorsDataPtr){
             NSLog(@">> ERROR: Failed to acquire a host pointer for m_Colors buffer!");
-            
             return NO;
-        } // if
+        }
         
-        m_PointSz = [device newBufferWithLength:sizeof(float) options:0];
-        
-        if(!m_PointSz)
-        {
+        _pointSizeBuffer = [device newBufferWithLength:sizeof(float) options:0];
+        if(!_pointSizeBuffer){
             NSLog(@">> ERROR: Failed to instantiate a new buffer for m_PointSz size!");
-            
             return NO;
-        } // if
+        }
         
-        mpPointSz = static_cast<float *>([m_PointSz contents]);
-        
-        if(!mpPointSz)
-        {
+        _pointSizeDataPtr = static_cast<float *>([_pointSizeBuffer contents]);
+        if(!_pointSizeDataPtr){
             NSLog(@">> ERROR: Failed to acquire a host pointer for buffer representing m_PointSz size!");
-            
             return NO;
-        } // if
+        }
 
+        // Создание трансформа
         mpTransform = [MetalNBodyTransform new];
-        
-        if(!mpTransform)
-        {
+        if(!mpTransform){
             NSLog(@">> ERROR: Failed to instantiate a N-Body linear transform object!");
-            
             return NO;
-        } // if
+        }
         
+        // Инициализация трансформа
         [mpTransform prepareForDevice:device];
-        
-        if(!mpTransform.haveBuffer)
-        {
+        if(!mpTransform.haveBuffer){
             NSLog(@">> ERROR: Failed to acquire a N-Body transform buffer resource!");
-            
             return NO;
-        } // if
+        }
 
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // _acquire
+}
 
-// Generate all the necessary vertex stage resources using a default system device
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_isStaged)
-    {
-        _isStaged = [self _acquire:device];
-    } // if
-} // acquire
+// Инициализация для конкретного девайся
+- (void)initWithDevice:(nullable id<MTLDevice>)device{
+    if(!_isStaged){
+        _isStaged = [self acquire:device];
+    }
+}
 
-// Encode the buffers for the vertex stage
-- (void) encode:(nullable id<MTLRenderCommandEncoder>)cmdEncoder
-{
-    if(_positions)
-    {
+// Обновляем буфферы в энкодере
+- (void)updateBuffersInsideEncoder:(nullable id<MTLRenderCommandEncoder>)cmdEncoder{
+    if(_positions){
         [cmdEncoder setVertexBuffer:_positions         offset:0 atIndex:0];
-        [cmdEncoder setVertexBuffer:m_Colors           offset:0 atIndex:1];
+        [cmdEncoder setVertexBuffer:_сolorsBuffer           offset:0 atIndex:1];
         [cmdEncoder setVertexBuffer:mpTransform.buffer offset:0 atIndex:2];
-        [cmdEncoder setVertexBuffer:m_PointSz          offset:0 atIndex:3];
-    } // if
-} // encode
+        [cmdEncoder setVertexBuffer:_pointSizeBuffer          offset:0 atIndex:3];
+    }
+}
 
 @end
