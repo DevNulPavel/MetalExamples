@@ -28,101 +28,105 @@ static const NSString *imageNames[kImageNamesCount] = {
 };
 
 @implementation APPLViewController {
-    // view
-    MTKView *_view;
+    // Вьюшка
+    MTKView* _view;
     
-    // renderer
+    // Рендерные переменные
     id <MTLDevice> _device;
     id <MTLCommandQueue> _commandQueue;
     id <MTLLibrary> _defaultLibrary;
     id <MTLRenderPipelineState> _pipelineState;
     id <MTLDepthStencilState> _depthState;
     
-    // Filters
-    APPLGaussianBlurFilter *_gaussianBlur;
-    APPLDownsampleFilter *_downsample;
+    // Фильтры
+    APPLGaussianBlurFilter* _gaussianBlur;
+    APPLDownsampleFilter* _downsample;
     
-    // uniforms
+    // Юниформ
     matrix_float4x4 _mvp;
     
-    // meshes
-    MTKMesh *_planeMesh;
+    // Меш
+    MTKMesh* _planeMesh;
     
-    // textures
+    // Текстуры
     id<MTLTexture> _displayTexture;
-    AAPLTexture   *_imageTextures[kImageNamesCount];
+    AAPLTexture* _imageTextures[kImageNamesCount];
     
-    // heaps / fence
+    // Кучи и заборы
     id<MTLHeap> _heap;
     id<MTLFence> _fence;
     
+    // Куча картинки
     id<MTLHeap> _imageHeap;
     
-    // Random image scaling / translation
+    // Скейлинг и позиция
     float _scale;
     vector_float2 _screenPosition;
     
-    // Timer
-    NSDate *_start;
+    // Таймер
+    NSDate* _start;
     NSTimeInterval _previousTime;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [self _setupMetal];
+    [self setupMetal];
     if(_device) {
-        [self _setupView];
-        [self _loadAssets];
-        [self _reshape];
-    }
-	else { // Fallback to a blank UIView, an application could also fallback to OpenGL ES here.
+        [self setupView];
+        [self loadAssets];
+        [self reshape];
+    } else {
+        // Fallback to a blank UIView, an application could also fallback to OpenGL ES here.
         NSLog(@"Metal is not supported on this device");
         self.view = [[UIView alloc] initWithFrame:self.view.frame];
     }
 }
 
-- (void)_setupView {
+- (void)setupView {
     _view = (MTKView *)self.view;
     _view.device = _device;
     _view.delegate = self;
     
-    // Setup the render target, choose values based on your app
+    // Формат буффера глубины
     _view.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
 }
 
-- (void)_setupMetal {
-    // Set the view to use the default device
+- (void)setupMetal {
+    // Создаем девайс
     _device = MTLCreateSystemDefaultDevice();
     
-    // Create a new command queue
+    // Создаем коммандную очередь
     _commandQueue = [_device newCommandQueue];
     
-    // Load all the shader files with a metal file extension in the project
+    // Создаем библиотеку для получения шейдеров и тд
     _defaultLibrary = [_device newDefaultLibrary];
 }
 
-- (void)_loadAssets {
-    // Generate meshes
-    MDLMesh *mdl = [MDLMesh newBoxWithDimensions:(vector_float3){2,2,0} segments:(vector_uint3){1,1,1}
-                     geometryType:MDLGeometryTypeTriangles inwardNormals:NO
-                        allocator:[[MTKMeshBufferAllocator alloc] initWithDevice: _device]];
-
+- (void)loadAssets {
+    // Генерация мешей
+    MDLMesh* mdl = [MDLMesh newBoxWithDimensions:(vector_float3){2,2,0}
+                                        segments:(vector_uint3){1,1,1}
+                                    geometryType:MDLGeometryTypeTriangles
+                                   inwardNormals:NO
+                                       allocator:[[MTKMeshBufferAllocator alloc] initWithDevice: _device]];
+    
+    // Создаем меш
     _planeMesh = [[MTKMesh alloc] initWithMesh:mdl device:_device error:nil];
     
-    // Load the fragment program into the library
+    // Фрагментный шейдер
     id <MTLFunction> fragmentProgram = [_defaultLibrary newFunctionWithName:@"texturedQuadFragment"];
     
-    // Load the vertex program into the library
+    // Вершинная программа
     id <MTLFunction> vertexProgram = [_defaultLibrary newFunctionWithName:@"texturedQuadVertex"];
     
-    // Create a vertex descriptor from the MTKMesh
-    MTLVertexDescriptor *vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(_planeMesh.vertexDescriptor);
+    // Создаем дескиптор вершин c описанием расположения данных
+    MTLVertexDescriptor* vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(_planeMesh.vertexDescriptor);
     vertexDescriptor.layouts[0].stepRate = 1;
     vertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
     
-    // Create a reusable pipeline state
-    MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    // Создаем пайплайн стейт
+    MTLRenderPipelineDescriptor* pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
     pipelineStateDescriptor.label = @"MyPipeline";
     pipelineStateDescriptor.sampleCount = _view.sampleCount;
     pipelineStateDescriptor.vertexFunction = vertexProgram;
@@ -132,66 +136,71 @@ static const NSString *imageNames[kImageNamesCount] = {
     pipelineStateDescriptor.depthAttachmentPixelFormat = _view.depthStencilPixelFormat;
     pipelineStateDescriptor.stencilAttachmentPixelFormat = _view.depthStencilPixelFormat;
     
-    NSError *error = nil;
+    NSError* error = nil;
     _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
     if (!_pipelineState) {
         NSLog(@"Failed to created pipeline state, error %@", error);
     }
     
-    MTLDepthStencilDescriptor *depthStateDesc = [[MTLDepthStencilDescriptor alloc] init];
+    // Настройка состояния работы с глубиной
+    MTLDepthStencilDescriptor* depthStateDesc = [[MTLDepthStencilDescriptor alloc] init];
     depthStateDesc.depthCompareFunction = MTLCompareFunctionLess;
     depthStateDesc.depthWriteEnabled = YES;
     _depthState = [_device newDepthStencilStateWithDescriptor:depthStateDesc];
     
-    // Create fence
+    // Создаем барьер
     _fence = [_device newFence];
     
-    // Initialize our filters
+    // Создание фильтров
     _gaussianBlur = [[APPLGaussianBlurFilter alloc] initWithDevice:_device];
     _downsample = [[APPLDownsampleFilter alloc] initWithDevice:_device];
     
-    // Preload all of our images into a heap
+    // Предзагрузка изображений в кучу
     MTLHeapDescriptor *imageHeapDesc = [[MTLHeapDescriptor alloc] init];
-    // Make the storage mode shared so the CPU can access the heap
+    
+    // Режим хранения общий для GPU и CPU
     imageHeapDesc.storageMode = MTLStorageModeShared;
     imageHeapDesc.size = 0;
     
-    // Calculate the combined size of all our images
+    // Вычисляем общий размер всех картинок
     for(int i = 0; i < kImageNamesCount; ++i) {
-        MTLSizeAndAlign sizeAndAlign;
         _imageTextures[i] = [[AAPLTexture alloc] initWithResourceName:(NSString*)imageNames[i]
                                                             extension:@"jpg"];
         
         _imageTextures[i].flip = NO;
+
+        MTLSizeAndAlign sizeAndAlign;
+        BOOL success = [_imageTextures[i] loadAndGetRequiredHeapSizeAndAlign:_device
+                                                             outSizeAndAlign:&sizeAndAlign];
         
-        if(![_imageTextures[i] loadAndGetRequiredHeapSizeAndAlign:_device
-                                                  outSizeAndAlign:&sizeAndAlign]) {
+        if(!success) {
             NSLog(@"Failed to load image %@", imageNames[i]);
         }
         
         imageHeapDesc.size += alignUp(sizeAndAlign.size, sizeAndAlign.align);
     }
 
-    // Create our image heap
+    // Создаем кучу для картинок
     _imageHeap = [_device newHeapWithDescriptor:imageHeapDesc];
     
-    // Copy the images into the heap
+    // Копируем изображения в кучу
     for(int i = 0; i < kImageNamesCount; ++i) {
         if(![_imageTextures[i] finalize:_imageHeap]) {
             NSLog(@"Failed to copy image %@ into image heap", imageNames[i]);
         }
     }
     
-    // Set up timer
+    // Инициализация таймера
     _start = [NSDate date];
     _previousTime = [_start timeIntervalSinceNow];
     
     _displayTexture = nil;
 }
 
-- (void)_setupHeap:(nonnull id <MTLTexture>)inTexture {
+// Настройка кучи для текстуры
+- (void)setupHeap:(nonnull id <MTLTexture>)inTexture {
     // Calculate the heap size
-    MTLTextureDescriptor *descriptor = getDescFromTexture(inTexture);
+    MTLTextureDescriptor* descriptor = getDescFromTexture(inTexture);
     
     MTLSizeAndAlign downsampleSizeAndAlignRequirement = [_downsample heapSizeAndAlignWithInputTextureDescriptor:descriptor];
     MTLSizeAndAlign gaussianBlurSizeAndAlignRequirement = [_gaussianBlur heapSizeAndAlignWithInputTextureDescriptor:descriptor];
@@ -210,7 +219,7 @@ static const NSString *imageNames[kImageNamesCount] = {
     }
 }
 
-- (nonnull id <MTLTexture>)_executeFilterGraph:(nonnull id <MTLTexture>)inTexture {
+- (nonnull id <MTLTexture>)executeFilterGraph:(nonnull id <MTLTexture>)inTexture {
     // Create a command buffer
     id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
@@ -231,7 +240,7 @@ static const NSString *imageNames[kImageNamesCount] = {
     return blurredTexture;
 }
 
-- (void)_render {
+- (void)render {
     NSTimeInterval currentTime = [_start timeIntervalSinceNow];
     NSTimeInterval elapsedTime = _previousTime - currentTime;
     float blurryness = elapsedTime / kTimeoutSeconds;
@@ -247,10 +256,10 @@ static const NSString *imageNames[kImageNamesCount] = {
         NSUInteger r = arc4random_uniform(kImageNamesCount - 1);
         id<MTLTexture> inTexture = _imageTextures[r].texture;
         
-        [self _setupHeap:inTexture];
-        _displayTexture = [self _executeFilterGraph:inTexture];
+        [self setupHeap:inTexture];
+        _displayTexture = [self executeFilterGraph:inTexture];
         
-        [self _reposition];
+        [self reposition];
     }
 
     // Create a new command buffer for each renderpass to the current drawable
@@ -303,15 +312,15 @@ static const NSString *imageNames[kImageNamesCount] = {
     [commandBuffer commit];
 }
 
-- (void)_reposition {
+- (void)reposition {
     NSUInteger r = arc4random_uniform(75);
     _scale = (float)(r + 25) / 100.0f;
     _screenPosition.x = (float)arc4random_uniform(100) / 100.0;
     _screenPosition.y = (float)arc4random_uniform(100) / 100.0;
-    [self _reshape];
+    [self reshape];
 }
 
-- (void)_reshape {
+- (void)reshape {
     float scaledWidth = (float)_displayTexture.width * _scale / (float)self.view.bounds.size.width;
     float scaledHeight = (float)_displayTexture.height * _scale / (float)self.view.bounds.size.height;
     float xTranslation = ((_screenPosition.x - (scaledWidth / 2.0)) * 2.0 - 1.0) / scaledWidth / 10.0;
@@ -322,13 +331,13 @@ static const NSString *imageNames[kImageNamesCount] = {
 
 // Called whenever view changes orientation or layout is changed
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
-    [self _reshape];
+    [self reshape];
 }
 
 // Called whenever the view needs to render
 - (void)drawInMTKView:(nonnull MTKView *)view {
     @autoreleasepool {
-        [self _render];
+        [self render];
     }
 }
 
