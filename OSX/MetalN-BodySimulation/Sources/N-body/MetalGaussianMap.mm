@@ -16,17 +16,14 @@
 
 #import "MetalGaussianMap.h"
 
-typedef enum : uint32_t
-{
+typedef enum : uint32_t {
     eCChannelIsUnkown = 0,
-    eCChannelIsR,
-    eCChannelIsRG,
-    eCChannelIsRGB,
-    eCChannelIsRGBA
+    eCChannelIsR = 1,
+    eCChannelIsRG = 2,
+    eCChannelIsRGBA = 4
 } CChannels;
 
-@implementation MetalGaussianMap
-{
+@implementation MetalGaussianMap {
 @private
     BOOL _haveTexture;
 
@@ -38,19 +35,17 @@ typedef enum : uint32_t
     uint32_t _channels;
     uint32_t _rowBytes;
     
-    MTLRegion m_Region;
+    MTLRegion _region;
         
-    dispatch_queue_t  m_DQueue[2];
+    dispatch_queue_t  _generateQueue[2];
     
-    CFQueueGenerator* mpQGen;
+    CFQueueGenerator* _generator;
 }
 
-- (instancetype) init
-{
+- (instancetype) init {
     self = [super init];
     
-    if(self)
-    {
+    if(self) {
         _texture     = nil;
         _texRes      = 64;
         _width       = _texRes;
@@ -59,44 +54,49 @@ typedef enum : uint32_t
         _rowBytes    = _width * _channels;
         _haveTexture = NO;
         
-        m_DQueue[0] = nullptr;
-        m_DQueue[1] = nullptr;
+        _generateQueue[0] = nullptr;
+        _generateQueue[1] = nullptr;
         
-        mpQGen = nil;
+        _generator = nil;
 
-        m_Region = MTLRegionMake2D(0, 0, _width, _height);
-    } // if
+        _region = MTLRegionMake2D(0, 0, _width, _height);
+    }
     
     return self;
-} // init
+}
 
-- (void) setTexRes:(uint32_t)texRes
-{
+// Разрешение текстуры
+- (void) setTexRes:(uint32_t)texRes {
     _texRes = (texRes) ? texRes : 64;
     _width  = _texRes;
     _height = _texRes;
     
-    m_Region = MTLRegionMake2D(0, 0, _width, _height);
-} // setResolution
+    _region = MTLRegionMake2D(0, 0, _width, _height);
+}
 
-- (void) setChannels:(uint32_t)channels
-{
+// Количество каналов
+- (void)setChannels:(uint32_t)channels {
     _channels = (channels) ? channels : 4;
-} // setChannels
+    // Нет поддержки RGB текстур
+    if(_channels == 3){
+        _channels = 4;
+    }
+}
 
-- (void) _initImage:(nonnull uint8_t *)pImage;
-{
+// Генерим картинку
+- (void)generateImage:(nonnull uint8_t *)pImage {
     const float nDelta = 2.0f / float(_texRes);
     
-    __block int32_t i = 0;
     __block int32_t j = 0;
     
     __block simd::float2 w = -1.0f;
     
-    dispatch_apply(_texRes, m_DQueue[0], ^(size_t y) {
+    // Идем по вертикали
+    dispatch_apply(_texRes, _generateQueue[0], ^(size_t y) {
         w.y += nDelta;
         
-        dispatch_apply(_texRes, m_DQueue[1], ^(size_t x) {
+        // Идем по горизонтали
+        dispatch_apply(_texRes, _generateQueue[1], ^(size_t x) {
             w.x += nDelta;
             
             float d = simd::length(w);
@@ -105,118 +105,111 @@ typedef enum : uint32_t
             t = CM::isLT(d, t) ? d : 1.0f;
             
             // Hermite interpolation where u = {1, 0} and v = {0, 0}
-            uint32_t nColor = uint8_t(255.0f * ((2.0f * t - 3.0f) * t * t + 1.0f));
+            uint8_t nColor = uint8_t(255.0f * ((2.0f * t - 3.0f) * t * t + 1.0f));
             
-            switch(_channels)
-            {
+            switch(_channels) {
                 case eCChannelIsRGBA:
-                    pImage[j+3] = nColor;
-                    
-                case eCChannelIsRGB:
-                    pImage[j+2] = nColor;
-                    
-                case eCChannelIsRG:
+                    pImage[j+0] = nColor;
                     pImage[j+1] = nColor;
-                    
-                case eCChannelIsR:
+                    pImage[j+2] = nColor;
+                    pImage[j+3] = nColor;
+                    break;
+                case eCChannelIsRG:
+                    pImage[j+0] = nColor;
+                    pImage[j+1] = nColor;
+                    break;
                 default:
+                case eCChannelIsR:
                     pImage[j] = nColor;
                     break;
-            } // switch
+            }
             
-            i += 2;
             j += _channels;
         });
         
         w.x = -1.0f;
     });
-} // _initImage
+}
 
-- (BOOL) _newQueues
-{
-    if(!mpQGen)
-    {
-        mpQGen = [CFQueueGenerator new];
-    } // if
+// Создание очередей инициализации
+- (BOOL)newQueues{
+    if(!_generator){
+        _generator = [CFQueueGenerator new];
+    }
     
-    if(mpQGen)
-    {
-        if(!m_DQueue[0])
-        {
-            mpQGen.label = "com.apple.metal.gaussianmap.ycoord";
-            
-            m_DQueue[0] = mpQGen.generateQueue;
-        } // if
+    if(_generator){
+        if(!_generateQueue[0]){
+            _generator.label = "com.apple.metal.gaussianmap.ycoord";
+            _generateQueue[0] = [_generator generateQueue];
+        }
         
-        if(!m_DQueue[1])
-        {
-            mpQGen.label = "com.apple.metal.gaussianmap.xcoord";
-            
-            m_DQueue[1] = mpQGen.generateQueue;
-        } // if
-    } // if
+        if(!_generateQueue[1]){
+            _generator.label = "com.apple.metal.gaussianmap.xcoord";
+            _generateQueue[1] = [_generator generateQueue];
+        }
+    }
+    return (_generateQueue[0] != nullptr) && (_generateQueue[1] != nullptr);
+}
 
-    return (m_DQueue[0] != nullptr) && (m_DQueue[1] != nullptr);
-} // _newQueues
-
-// Generate the Gaussian image
-- (nullable uint8_t*) _newImage
-{
+// Генерация новой картинки
+- (nullable uint8_t*) newImage {
     uint8_t* pImage = nullptr;
     
-    if([self _newQueues])
-    {
+    if([self newQueues]){
         pImage = new (std::nothrow) uint8_t[_channels * _texRes * _texRes];
         
-        if(pImage != nullptr)
-        {
-            [self _initImage:pImage];
-        } // if
-        else
-        {
+        if(pImage != nullptr){
+            [self generateImage:pImage];
+        }else{
             NSLog(@">> ERROR: Failed allocating backing-store for a Gaussian image!");
-        } // else
-    } // if
+        }
+    }
     
     return pImage;
-} // _newImage
+}
 
 // Generate a Gaussian texture
-- (BOOL) _acquire:(nullable id<MTLDevice>)device
-{
-    if(device)
-    {
-        // Create a Metal texture descriptor
-        MTLTextureDescriptor* pDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+- (BOOL) acquire:(nullable id<MTLDevice>)device {
+    if(device){
+        MTLPixelFormat format = MTLPixelFormatRGBA8Unorm;
+        switch (_channels) {
+            case eCChannelIsRGBA:
+                format = MTLPixelFormatRGBA8Unorm;
+                break;
+            case eCChannelIsRG:
+                format = MTLPixelFormatRG8Unorm;
+                break;
+            case eCChannelIsR:
+            default:
+                format = MTLPixelFormatR8Unorm;
+                break;
+        }
+        
+        // Описание текстуры
+        MTLTextureDescriptor* pDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format
                                                                                          width:_width
                                                                                         height:_height
                                                                                      mipmapped:NO];
-        
-        if(!pDesc)
-        {
+        if(!pDesc){
             return NO;
-        } // if
+        }
         
         // Create a Metal texture from a descriptor
         _texture = [device newTextureWithDescriptor:pDesc];
-        
-        if(!_texture)
-        {
+        if(!_texture){
             return NO;
-        } // if
+        }
         
         // Generate a Gaussian image data
-        uint8_t* pImage = [self _newImage];
-        
-        if(!pImage)
-        {
+        uint8_t* pImage = [self newImage];
+        if(!pImage){
             return NO;
-        } // if
+        }
         
         _rowBytes = _width * _channels;
         
-        // Upload the Gaussian image into the Metal texture
-        [_texture  replaceRegion:m_Region
+        // Загружаем данные в текстуру
+        [_texture  replaceRegion:_region
                      mipmapLevel:0
                        withBytes:pImage
                      bytesPerRow:_rowBytes];
@@ -224,23 +217,18 @@ typedef enum : uint32_t
         delete [] pImage;
         
         return YES;
-    } // if
-    else
-    {
+    }else{
         NSLog(@">> ERROR: Metal device is nil!");
-    } // if
+    }
     
     return NO;
-} // _acquire
+}
 
-// Generate a texture from samples generated by convolving the initial
-// data with a Gaussian white noise
-- (void) acquire:(nullable id<MTLDevice>)device
-{
-    if(!_haveTexture)
-    {
-        _haveTexture = [self _acquire:device];
-    } // if
-} // acquire
+// Инициализация
+- (void)initWithDevice:(nullable id<MTLDevice>)device{
+    if(!_haveTexture){
+        _haveTexture = [self acquire:device];
+    }
+}
 
 @end

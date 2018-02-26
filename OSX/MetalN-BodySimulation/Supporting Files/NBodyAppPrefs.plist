@@ -19,7 +19,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<real>0.3</real>
 			<key>NBody_Timestep</key>
@@ -33,7 +33,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<integer>1</integer>
 			<key>NBody_Timestep</key>
@@ -47,7 +47,7 @@
 			<key>NBody_Damping</key>
 			<real>1</real>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<integer>1</integer>
 			<key>NBody_Timestep</key>
@@ -61,7 +61,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<real>0.145</real>
 			<key>NBody_Timestep</key>
@@ -75,7 +75,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<real>0.1</real>
 			<key>NBody_Timestep</key>
@@ -89,7 +89,7 @@
 			<key>NBody_Damping</key>
 			<integer>1</integer>
 			<key>NBody_PointSize</key>
-			<integer>30</integer>
+			<integer>16</integer>
 			<key>NBody_Softening</key>
 			<integer>1</integer>
 			<key>NBody_Timestep</key>

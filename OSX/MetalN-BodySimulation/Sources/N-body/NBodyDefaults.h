@@ -23,7 +23,7 @@ namespace NBody {
         static const float kAspectRatio  = 1.0f;
         static const float kCenter       = 0.5;
         static const float kDamping      = 1.0f;
-        static const float kPointSz      = 30.0f;
+        static const float kPointSz      = 16.0f;
         static const float kSofteningSqr = 1.0f;
         static const float kTolerance    = 1.0e-9;
         static const float kTimestep     = 0.016f;

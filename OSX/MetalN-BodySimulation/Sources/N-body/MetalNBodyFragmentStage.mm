@@ -116,9 +116,9 @@
             return NO;
         } // if
         
-        mpGaussian.channels = mnChannels;
-        mpGaussian.texRes   = mnTexRes;
-        mpGaussian.device   = device;
+        [mpGaussian setChannels:mnChannels];
+        [mpGaussian setTexRes:mnTexRes];
+        [mpGaussian initWithDevice:device];
         
         if(!mpGaussian.haveTexture)
         {
