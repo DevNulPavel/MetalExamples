@@ -14,8 +14,7 @@
 #include <TargetConditionals.h>
 #import "AAPLTessellationPipeline.h"
 
-@implementation AAPLTessellationPipeline
-{
+@implementation AAPLTessellationPipeline {
     id <MTLDevice> _device;
     id <MTLCommandQueue> _commandQueue;
     id <MTLLibrary> _library;
@@ -30,37 +29,35 @@
     id <MTLBuffer> _controlPointsBufferQuad;
 }
 
-- (nullable instancetype)initWithMTKView:(nonnull MTKView *)view
-{
+- (nullable instancetype)initWithMTKView:(nonnull MTKView *)view {
     self = [super init];
-    if(self)
-    {
-        // Initialize properties
+    if(self) {
+        // Настройка
         _wireframe = YES;
         _patchType = MTLPatchTypeTriangle;
         _edgeFactor = 2.0;
         _insideFactor = 2.0;
         
-        // Setup Metal
+        // Настраиваем метал
         if(![self didSetupMetal]) {
             return nil;
         }
         
-        // Assign device and delegate to MTKView
+        // Настраиваем делегат и устройство во вьюшке
         view.device = _device;
         view.delegate = self;
         
-        // Setup compute pipelines
+        // Создаем пайплайны вычисления
         if(![self didSetupComputePipelines]) {
             return nil;
         }
         
-        // Setup render pipelines
+        // Настраиваем пайплайн отрисовки
         if(![self didSetupRenderPipelinesWithMTKView:view]) {
             return nil;
         }
         
-        // Setup Buffers
+        // Настраиваем буфферы
         [self setupBuffers];
     }
     return self;
@@ -68,15 +65,15 @@
 
 #pragma mark Setup methods
 
-- (BOOL)didSetupMetal
-{
-    // Use the default device
+- (BOOL)didSetupMetal {
+    // Получаем Metal девайс
     _device = MTLCreateSystemDefaultDevice();
     if(!_device) {
         NSLog(@"Metal is not supported on this device");
         return NO;
     }
     
+    // Проверяем возможности тасселяции
 #if TARGET_OS_IOS
     if(![_device supportsFeatureSet:MTLFeatureSet_iOS_GPUFamily3_v2]) {
         NSLog(@"Tessellation is not supported on this device");
@@ -89,20 +86,20 @@
     }
 #endif
     
-    // Create a new command queue
+    // Создаем коммандную очередь
     _commandQueue = [_device newCommandQueue];
     
-    // Load the default library
+    // Создаем библиотеку
     _library = [_device newDefaultLibrary];
     
     return YES;
 }
 
-- (BOOL)didSetupComputePipelines
-{
-    NSError* computePipelineError;
+// Создание вычислительного пайплайна
+- (BOOL)didSetupComputePipelines {
+    NSError* computePipelineError = NULL;
     
-    // Create compute pipeline for triangle-based tessellation
+    // Создаем вычислительный пайплайн для тесселяции треугольников
     id <MTLFunction> kernelFunctionTriangle = [_library newFunctionWithName:@"tessellation_kernel_triangle"];
     _computePipelineTriangle = [_device newComputePipelineStateWithFunction:kernelFunctionTriangle
                                                                       error:&computePipelineError];
@@ -111,7 +108,7 @@
         return NO;
     }
     
-    // Create compute pipeline for quad-based tessellation
+    // Получаем вычислительный пайплайн для тесселяции прямоугольников
     id <MTLFunction> kernelFunctionQuad = [_library newFunctionWithName:@"tessellation_kernel_quad"];
     _computePipelineQuad = [_device newComputePipelineStateWithFunction:kernelFunctionQuad
                                                                   error:&computePipelineError];
@@ -123,12 +120,11 @@
     return YES;
 }
 
-- (BOOL)didSetupRenderPipelinesWithMTKView:(nonnull MTKView *)view
-{
-    NSError *renderPipelineError = nil;
+// Создаем рендер-пайплайн
+- (BOOL)didSetupRenderPipelinesWithMTKView:(nonnull MTKView *)view {
+    NSError* renderPipelineError = nil;
     
-    // Create a reusable vertex descriptor for the control point data
-    // This describes the inputs to the post-tessellation vertex function, declared with the 'stage_in' qualifier
+    // Создаем описание структуры вершин отрисовки для стадии пост-тасселяции
     MTLVertexDescriptor* vertexDescriptor = [MTLVertexDescriptor vertexDescriptor];
     vertexDescriptor.attributes[0].format = MTLVertexFormatFloat4;
     vertexDescriptor.attributes[0].offset = 0;
@@ -137,16 +133,19 @@
     vertexDescriptor.layouts[0].stepRate = 1;
     vertexDescriptor.layouts[0].stride = 4.0*sizeof(float);
     
-    // Create a reusable render pipeline descriptor
-    MTLRenderPipelineDescriptor *renderPipelineDescriptor = [MTLRenderPipelineDescriptor new];
+    // Создание повторно используемого дескриптора пайплайна
+    MTLRenderPipelineDescriptor* renderPipelineDescriptor = [MTLRenderPipelineDescriptor new];
     
-    // Configure common render properties
+    // Фрагментный шейдер тасселяции
+    id<MTLFunction> fragmentFunction = [_library newFunctionWithName:@"tessellation_fragment"];
+    
+    // Настраиваем пайплайн отрисовки
     renderPipelineDescriptor.vertexDescriptor = vertexDescriptor;
     renderPipelineDescriptor.sampleCount = view.sampleCount;
     renderPipelineDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat;
-    renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName:@"tessellation_fragment"];
+    renderPipelineDescriptor.fragmentFunction = fragmentFunction;
     
-    // Configure common tessellation properties
+    // Настраиваем тасселяцию
     renderPipelineDescriptor.tessellationFactorScaleEnabled = NO;
     renderPipelineDescriptor.tessellationFactorFormat = MTLTessellationFactorFormatHalf;
     renderPipelineDescriptor.tessellationControlPointIndexType = MTLTessellationControlPointIndexTypeNone;
@@ -161,7 +160,7 @@
     renderPipelineDescriptor.maxTessellationFactor = 64;
 #endif
     
-    // Create render pipeline for triangle-based tessellation
+    // Создание пайплайна тасселяции треугольниками
     renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName:@"tessellation_vertex_triangle"];
     _renderPipelineTriangle = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor
                                                                       error:&renderPipelineError];
@@ -170,7 +169,7 @@
         return NO;
     }
     
-    // Create render pipeline for quad-based tessellation
+    // Создание пайплайна тасселяции прямоугольниками
     renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName:@"tessellation_vertex_quad"];
     _renderPipelineQuad = [_device newRenderPipelineStateWithDescriptor:renderPipelineDescriptor
                                                                   error:&renderPipelineError];
@@ -227,16 +226,15 @@
 
 #pragma mark Compute/Render methods
 
-- (void)computeTessellationFactorsWithCommandBuffer:(id<MTLCommandBuffer>)commandBuffer
-{
-    // Create a compute command encoder
+- (void)computeTessellationFactorsWithCommandBuffer:(id<MTLCommandBuffer>)commandBuffer {
+    // Создаем вычислительный энкодер
     id <MTLComputeCommandEncoder> computeCommandEncoder = [commandBuffer computeCommandEncoder];
     computeCommandEncoder.label = @"Compute Command Encoder";
     
-    // Begin encoding compute commands
+    // Пишем имя для отладочной информации
     [computeCommandEncoder pushDebugGroup:@"Compute Tessellation Factors"];
     
-    // Set the correct compute pipeline
+    // Включаем необходимый вычислительный пайплайн
     if(self.patchType == MTLPatchTypeTriangle) {
         [computeCommandEncoder setComputePipelineState:_computePipelineTriangle];
     } else if(self.patchType == MTLPatchTypeQuad) {
@@ -304,23 +302,22 @@
 #pragma mark MTKView delegate methods
 
 // Called whenever view changes orientation or layout is changed
-- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
-{
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
 }
 
-
-// Called whenever the view needs to render
-- (void)drawInMTKView:(nonnull MTKView *)view
-{
+// Отрисовка Metal
+- (void)drawInMTKView:(nonnull MTKView *)view {
     @autoreleasepool {
-        // Create a new command buffer for each tessellation pass
+        // Создание коммандного буффера
         id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
         commandBuffer.label = @"Tessellation Pass";
         
+        // Выполняем вычислительную стадию тасселяции
         [self computeTessellationFactorsWithCommandBuffer:commandBuffer];
+        
         [self tessellateAndRenderInMTKView:view withCommandBuffer:commandBuffer];
         
-        // Finalize tessellation pass and commit the command buffer to the GPU
+        // Коммитим тассиляцию и рендеринг
         [commandBuffer commit];
     }
 }
