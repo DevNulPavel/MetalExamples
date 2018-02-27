@@ -185,18 +185,16 @@
 {
     // Allocate memory for the tessellation factors buffer
     // This is a private buffer whose contents are later populated by the GPU (compute kernel)
+    // Создаем буффер для выполнения тасселяции
     _tessellationFactorsBuffer = [_device newBufferWithLength:256
-                                               options:MTLResourceStorageModePrivate];
+                                                      options:MTLResourceStorageModePrivate];
     _tessellationFactorsBuffer.label = @"Tessellation Factors";
     
-    // Allocate memory for the control points buffers
-    // These are shared or managed buffers whose contents are immediately populated by the CPU
+    // Настраиваем режим доступа к памяти буфферов
     MTLResourceOptions controlPointsBufferOptions;
 #if TARGET_OS_IOS
-    // In iOS, the storage mode can only be shared
     controlPointsBufferOptions = MTLResourceStorageModeShared;
 #elif TARGET_OS_OSX
-    // In OS X, the storage mode can be shared or managed, but managed may yield better performance
     controlPointsBufferOptions = MTLResourceStorageModeManaged;
 #endif
     
@@ -241,17 +239,17 @@
         [computeCommandEncoder setComputePipelineState:_computePipelineQuad];
     }
     
-    // Bind the user-selected edge and inside factor values to the compute kernel
+    // Для вычислительной стадии устанавливаем данные настроек
     [computeCommandEncoder setBytes:&_edgeFactor length:sizeof(float) atIndex:0];
     [computeCommandEncoder setBytes:&_insideFactor length:sizeof(float) atIndex:1];
     
-    // Bind the tessellation factors buffer to the compute kernel
+    // Устанавливаем буффер таccеляции
     [computeCommandEncoder setBuffer:_tessellationFactorsBuffer offset:0 atIndex:2];
     
-    // Dispatch threadgroups
+    // Кидаем задачи в очередь
     [computeCommandEncoder dispatchThreadgroups:MTLSizeMake(1, 1, 1) threadsPerThreadgroup:MTLSizeMake(1, 1, 1)];
     
-    // All compute commands have been encoded
+    // Заканчиваем энкодинг
     [computeCommandEncoder popDebugGroup];
     [computeCommandEncoder endEncoding];
 }
