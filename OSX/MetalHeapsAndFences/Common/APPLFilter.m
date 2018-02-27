@@ -85,7 +85,7 @@ static const NSUInteger kThreadgroupDepth  = 1;
 typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
     AAPLSeparablePassHorizontal = 0,
     AAPLSeparablePassVertical = 1,
-    AAPLSeparablePassSize
+    AAPLSeparablePassSize = 2
 };
 
 - (instancetype) initWithDevice:(nonnull id <MTLDevice>)device {
@@ -136,7 +136,7 @@ typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
                                                                                     width:(inDescriptor.width >> 1)
                                                                                    height:(inDescriptor.height >> 1)
                                                                                 mipmapped:NO];
-    // Usage
+    // Используем для записи шейдера
     textureDescriptor.usage |= MTLTextureUsageShaderWrite;
     return [_device heapTextureSizeAndAlignWithDescriptor:textureDescriptor];
 }
@@ -145,76 +145,86 @@ typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
                                           inputTexture:(_Nonnull id <MTLTexture>)inTexture
                                                   heap:(_Nonnull id <MTLHeap>)heap
                                                  fence:(_Nonnull id <MTLFence>)fence {
-    
-    /**
-     Perform blur in place on each mipmap level, starting with the first mipmap 
-     level.
-     */
+    // Выполняем блюр для каждого мипмап левела начиная с первого
     for(uint32_t mipmapLevel = 1; mipmapLevel < inTexture.mipmapLevelCount; ++mipmapLevel) {
-        MTLTextureDescriptor *textureDescriptior = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
-                                                                                        width:(inTexture.width >> mipmapLevel)
-                                                                                       height:(inTexture.height >> mipmapLevel)
-                                                                                    mipmapped:NO];
-        // Heap resources must share the same storage mode as the heap.
+        // Создаем описание текстуры
+        MTLTextureDescriptor*textureDescriptior = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                                                                     width:(inTexture.width >> mipmapLevel)
+                                                                                                    height:(inTexture.height >> mipmapLevel)
+                                                                                                 mipmapped:NO];
+        
+        // Ресурсы в куче должны иметь такой же режим хранения, как у кучи
         textureDescriptior.storageMode = MTLStorageModePrivate;
         
-        // Usage
+        // Использование
         textureDescriptior.usage |= MTLTextureUsageShaderWrite;
         
+        // Корректируем размеры
         if(textureDescriptior.width <= 0) {
             textureDescriptior.width = 1;
         }
-        
         if(textureDescriptior.height <= 0) {
             textureDescriptior.height = 1;
         }
-
-        id <MTLTexture> horizontalTexture = [heap newTextureWithDescriptor:textureDescriptior];
+        
+        // Создаем текстуру в куче
+        id<MTLTexture> horizontalTexture = [heap newTextureWithDescriptor:textureDescriptior];
         assert(horizontalTexture && "Failed to allocate on heap, did not request enough resources");
         
-        MTLSize threadgroupSize;
-        MTLSize threadgroupCount;
+        // Выставляем размер тредгрупп 16x16x1
+        MTLSize threadgroupSize = MTLSizeMake(kThreadgroupWidth, kThreadgroupHeight, kThreadgroupDepth);
         
-        // Set the compute kernel's thread group size of 16x16.
-        threadgroupSize = MTLSizeMake(kThreadgroupWidth, kThreadgroupHeight, kThreadgroupDepth);
-        
-        // Calculate the compute kernel's width and height.
+        // Вычисляем количество групп потоков по горизонтали и по вертикали
         NSUInteger nThreadCountW = (horizontalTexture.width  + threadgroupSize.width -  1) / threadgroupSize.width;
         NSUInteger nThreadCountH = (horizontalTexture.height + threadgroupSize.height - 1) / threadgroupSize.height;
         
-        // Set the compute kernel's thread count.
-        threadgroupCount = MTLSizeMake(nThreadCountW, nThreadCountH, 1);
+        // Переменная с количестом групп потоков
+        MTLSize threadgroupCount = MTLSizeMake(nThreadCountW, nThreadCountH, 1);
         
-        id <MTLComputePipelineState> kernel[AAPLSeparablePassSize] = { _horizontalKernel, _verticalKernel };
-        id <MTLTexture> inTextures[AAPLSeparablePassSize] = { inTexture, horizontalTexture };
-        id <MTLTexture> outTextures[AAPLSeparablePassSize] = { horizontalTexture, inTexture };
+        // Массив вычислительных ядер
+        id<MTLComputePipelineState> kernel[AAPLSeparablePassSize] = { _horizontalKernel, _verticalKernel };
+        // Массив входных текстур
+        id<MTLTexture> inTextures[AAPLSeparablePassSize] = { inTexture, horizontalTexture };
+        // Массив выходных текстур
+        id<MTLTexture> outTextures[AAPLSeparablePassSize] = { horizontalTexture, inTexture };
+        
         uint32_t mipmapLevelZero = 0;
         
+        // Делаем сначала горизонтальный, потом вертикальный проход
         for(AAPLSeparablePass pass = AAPLSeparablePassHorizontal; pass < AAPLSeparablePassSize; ++pass) {
+            // Энкодер создаем
             id <MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
             
             if(computeEncoder) {
+                // Ждем барьер
                 [computeEncoder waitForFence:fence];
                 
+                // Устанавливаем пайплайн стейт вычисления
                 [computeEncoder setComputePipelineState:kernel[pass]];
                 
+                // Устанавливаем текстуру входную
                 [computeEncoder setTexture:inTextures[pass]
                                    atIndex:0];
                 
+                // Устанавливаем выходную текстуру
                 [computeEncoder setTexture:outTextures[pass]
                                    atIndex:1];
                 
+                // Устанавливаем уровень мипмаппинга 1
                 [computeEncoder setBytes:(pass == AAPLSeparablePassHorizontal) ? &mipmapLevel : &mipmapLevelZero
                                   length:sizeof(mipmapLevel)
                                  atIndex:0];
                 
+                // Устанавливаем уровень миплмаппинга 2
                 [computeEncoder setBytes:(pass == AAPLSeparablePassHorizontal) ? &mipmapLevelZero : &mipmapLevel
                                   length:sizeof(mipmapLevel)
                                  atIndex:1];
                 
+                // Ставим исполнение в очередь
                 [computeEncoder dispatchThreadgroups:threadgroupCount
                                threadsPerThreadgroup:threadgroupSize];
                 
+                // Разрешаем дальнейшее исполнение
                 [computeEncoder updateFence:fence];
                 
                 [computeEncoder endEncoding];
@@ -225,6 +235,7 @@ typedef NS_ENUM(NSInteger, AAPLSeparablePass) {
          We can now make our horizontal texture aliasable and use that space for 
          the next mip level.
          */
+        // Можно сделать нашу горизонтальную текстуру
         [horizontalTexture makeAliasable];
     }
     
