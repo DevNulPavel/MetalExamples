@@ -21,7 +21,7 @@ static void gaussianblur(texture2d<half, access::read> inTexture,   // Вход�
     // Размерность выходной текстуры
     uint2 outTextureSize(outTexture.get_width(), outTexture.get_height());
     
-    if(all(gid < textureDim)) {
+    if(all(gid < outTextureSize)) {
         // Переменная выходного цвета
         half3 outColor(0.0);
         

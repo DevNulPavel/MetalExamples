@@ -251,12 +251,14 @@ static inline matrix_float4x4 matrix_from_scale(const float x, const float y, co
     NSUInteger totalSizeRequirement = downsampleSizeAndAlignRequirement.size + alignUp(gaussianBlurSizeAndAlignRequirement.size, gaussianBlurSizeAndAlignRequirement.align);
     NSUInteger maxAlignmentRequirement = max(gaussianBlurSizeAndAlignRequirement.align, downsampleSizeAndAlignRequirement.align);
     
-    // Make sure the heap is big enough to support the largest alignment
+    // Увеличиваем размерность размера кучи до ближайшего выровненного значения
     totalSizeRequirement = alignUp(totalSizeRequirement, maxAlignmentRequirement);
     
-    if(!_heap || totalSizeRequirement > [_heap maxAvailableSizeWithAlignment:maxAlignmentRequirement]) {
-        MTLHeapDescriptor *heapDesc = [[MTLHeapDescriptor alloc] init];
+    if(!_heap || (totalSizeRequirement > [_heap maxAvailableSizeWithAlignment:maxAlignmentRequirement])) {
+        MTLHeapDescriptor* heapDesc = [[MTLHeapDescriptor alloc] init];
         heapDesc.size = totalSizeRequirement;
+        
+        // Создаем кучу нужного размера
         _heap = nil;
         _heap = [_device newHeapWithDescriptor:heapDesc];
     }
@@ -267,7 +269,7 @@ static inline matrix_float4x4 matrix_from_scale(const float x, const float y, co
     // Создаем буффер комманд
     id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
-    
+
     // Выполняем фильтрацию
     id <MTLTexture> downsampledTexture = [_downsample executeWithCommandBuffer:commandBuffer
                                                                   inputTexture:inTexture
@@ -307,7 +309,9 @@ static inline matrix_float4x4 matrix_from_scale(const float x, const float y, co
 }
 
 - (void)render {
+    // Текущее время
     NSTimeInterval currentTime = [_start timeIntervalSinceNow];
+    // Сколько прошло времени
     NSTimeInterval elapsedTime = _previousTime - currentTime;
     float blurryness = elapsedTime / kTimeoutSeconds;
     
