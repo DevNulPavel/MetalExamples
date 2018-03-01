@@ -29,8 +29,7 @@ static const float kLightRadius = 0.5f;
 // total number of frames to preapare in advanced
 static const int kMaxFrameLag = 3;
 
-@implementation AAPLRenderer
-{
+@implementation AAPLRenderer {
     id <MTLCommandQueue>           _commandQueue;
     id <MTLLibrary>                _defaultLibrary;
     CFTimeInterval                 _frameTime;
@@ -108,22 +107,20 @@ static const int kMaxFrameLag = 3;
     int                            _numFrames;
     int                            _currFrameIndex;}
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         
-        // find a usable Device
+        // Получаем девайс
         _device = MTLCreateSystemDefaultDevice();
         
-        // create a new command queue
+        // Создаем коммандную очередь
         _commandQueue = [_device newCommandQueue];
-        
+
+        // Получае
         _defaultLibrary = [_device newDefaultLibrary];
         if(!_defaultLibrary) {
             NSLog(@">> ERROR: Couldnt create a default shader library");
-            
-            // assert here becuase if the shader libary isnt loading, shaders arent compiling
             assert(0);
         }
         

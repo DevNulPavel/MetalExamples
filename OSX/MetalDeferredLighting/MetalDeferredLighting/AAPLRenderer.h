@@ -19,10 +19,10 @@
 
 @interface AAPLRenderer : NSObject <AAPLViewControllerDelegate, AAPLViewDelegate>
 
-// renderer will create a default device at init time.
+// Metal девайс
 @property (nonatomic, readonly) id <MTLDevice> device;
 
-// load all assets and configure the view before triggering rendering
-- (void)configure:(AAPLView *)view;
+// Загружаем все необходимые ассеты
+- (void)configure:(AAPLView*)view;
 
 @end

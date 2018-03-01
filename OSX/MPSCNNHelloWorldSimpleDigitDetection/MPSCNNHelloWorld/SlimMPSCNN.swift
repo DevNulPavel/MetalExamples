@@ -21,8 +21,11 @@ class SlimMPSCNNConvolution: MPSCNNConvolution{
     /**
         A property to keep info from init time whether we will pad input image or not for use during encode call
      */
-    private var padding = true
+    private var localPadding = true
     
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder);
+    }
     /**
      Initializes a fully connected kernel.
      
@@ -93,7 +96,7 @@ class SlimMPSCNNConvolution: MPSCNNConvolution{
         self.destinationFeatureChannelOffset = Int(destinationFeatureChannelOffset)
         
         // set padding for calculation of offset during encode call
-        padding = willPad
+        localPadding = willPad
         
         // unmap files at initialization of MPSCNNConvolution, the weights are copied and packed internally we no longer require these
         assert(munmap(hdrW, Int(sizeWeights)) == 0, "munmap failed with errno = \(errno)")
@@ -103,7 +106,7 @@ class SlimMPSCNNConvolution: MPSCNNConvolution{
         close(fd_w)
         close(fd_b)
     }
-    
+
     /**
          Encode a MPSCNNKernel into a command Buffer. The operation shall proceed out-of-place.
          
@@ -118,7 +121,7 @@ class SlimMPSCNNConvolution: MPSCNNConvolution{
      */
     override func encode(commandBuffer: MTLCommandBuffer, sourceImage: MPSImage, destinationImage: MPSImage) {
         // select offset according to padding being used or not
-        if padding {
+        if localPadding {
             let pad_along_height = ((destinationImage.height - 1) * strideInPixelsY + kernelHeight - sourceImage.height)
             let pad_along_width  = ((destinationImage.width - 1) * strideInPixelsX + kernelWidth - sourceImage.width)
             let pad_top = Int(pad_along_height / 2)
@@ -159,6 +162,10 @@ class SlimMPSCNNFullyConnected: MPSCNNFullyConnected{
          - Returns:
              A valid SlimMPSCNNFullyConnected object or nil, if failure.
      */
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder);
+    }
     
     init(kernelWidth: UInt, kernelHeight: UInt, inputFeatureChannels: UInt, outputFeatureChannels: UInt, neuronFilter: MPSCNNNeuron? = nil, device: MTLDevice, kernelParamsBinaryName: String, destinationFeatureChannelOffset: UInt = 0){
         
