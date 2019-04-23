@@ -176,17 +176,17 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         // Получаем количество потоков на группу
         // threadExecutionWidth - это количество потоков, которое дается на выполнение отдельной функции за один вызов
         // точнее - количество гарантированно параллельный потоков
-        _threadsDimentionX = _multiplier * _computePipelineState.threadExecutionWidth;
+        _threadsDimentionX = _computePipelineState.threadExecutionWidth;
         
-        // Максимальное количество потоков в группе потоков
-        //_threadsDimentionX = _multiplier * _computePipelineState.maxTotalThreadsPerThreadgroup;
+        // Просто максимальное количество потоков в группе потоков, но не обязательно параллельных
+        //_threadsDimentionX = MIN(_computePipelineState.maxTotalThreadsPerThreadgroup, 1024);
         
         if((_preferences.particles % _threadsDimentionX) != 0) {
             NSLog(@">> ERROR: The number of bodies needs to be a multiple of the workgroup size!");
             return NO;
         }
         
-        // Размер буфферных данных на отдельную тредгруппу
+        // Размер буфферных данных на отдельную тредгруппу, максимум 16Кб
         _threadgroupMemorySize = kNBodyFloat4Size * _threadsDimentionX;
         
         // Вычисляем необходимое количество групп потоков
@@ -299,7 +299,7 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
             // Выставляем буффер с параметрами
             [encoder setBuffer:_paramsBuffer offset:0 atIndex:4];
             
-            // Размер буфферных данных на отдельную тредгруппу
+            // Размер буфферных данных на отдельную тредгруппу, максимум - 16Кб
             [encoder setThreadgroupMemoryLength:_threadgroupMemorySize atIndex:0];
             
             // Ставим вычисления в очередь

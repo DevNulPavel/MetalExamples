@@ -68,7 +68,7 @@ fragment half4 NBodyLightingFragment(FragColor        inColor      [[ stage_in  
 
 typedef NBody::Compute::Prefs NBodyPrefs;
 
-static float3 NBodyComputeForce(const float4 pos_1, const float4 pos_0, const float  softeningSqr) {
+static float3 NBodyComputeForce(const float4 pos_1, const float4 pos_0, const float softeningSqr) {
     // Вычисляем направление от старой позиции к новой
     float3 r = pos_1.xyz - pos_0.xyz;
     
@@ -117,11 +117,11 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     // Обходим все точки с шагом размером равным количеству потоков на тредгруппу
     // Потоки в тредгруппе выполняются параллельно и синхронно,
     // так как выставлено количество потоков на группу, равное размеру SIMD
-    for(ushort i = 0; i < particles; i += threadsCountOnGroup){
+    for(uint i = 0; i < particles; i += threadsCountOnGroup){
         // Обновляем значение позиции конкретной точки в быстрой разделяемой памяти
         threadgroupBufferData[localPosInGroup] = pos_0[i + localPosInGroup];
         
-        for(ushort j = 0; j < threadsCountOnGroup; j++){
+        for(uint j = 0; j < threadsCountOnGroup; j++){
             acc += NBodyComputeForce(threadgroupBufferData[j], oldPos, softeningSqr);
         }
     }
@@ -140,7 +140,7 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
     oldVel.xyz += acc * prefs.timestep;
     
     // Умножаем скорость на затухание
-    oldVel.xyz *= prefs.damping;
+    oldVel.xyz += oldVel.xyz * prefs.damping * prefs.timestep;
     
     // Обновляем позицию точки на основе скорости движения
     oldPos.xyz += oldVel.xyz * prefs.timestep;
