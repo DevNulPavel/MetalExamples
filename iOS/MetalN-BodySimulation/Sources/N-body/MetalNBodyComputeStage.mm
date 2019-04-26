@@ -178,7 +178,7 @@ const static uint32_t kNBodyFloat4Size = sizeof(simd::float4);
         // точнее - количество гарантированно параллельный потоков
         _threadsDimentionX = _computePipelineState.threadExecutionWidth;
         
-        // Просто максимальное количество потоков в группе потоков, но не обязательно параллельных
+        // Просто максимальное количество потоков в группе потоков, но не обязательно параллельных, для такого варианта требуется барьер
         //_threadsDimentionX = MIN(_computePipelineState.maxTotalThreadsPerThreadgroup, 1024);
         
         if((_preferences.particles % _threadsDimentionX) != 0) {

@@ -125,6 +125,10 @@ kernel void NBodyIntegrateSystem(device float4* const pos_1 [[ buffer(0) ]],    
             acc += NBodyComputeForce(threadgroupBufferData[j], oldPos, softeningSqr);
         }
     }
+    
+    // Ждем завершения операций threadgroup памяти данной группы, требуется если мы используем максимальное количество потоков в группе
+    //threadgroup_barrier(mem_flags::mem_none);
+    
     // Вычисляем взаимодействие со всеми остальными частицами
     /*for(ushort i = 0; i < particles; i++){
         if(positionInAllGrid != i){
